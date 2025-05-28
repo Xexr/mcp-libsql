@@ -1,9 +1,5 @@
 import { createClient, type Client, type ResultSet } from '@libsql/client';
-import type {
-  DatabaseConfig,
-  DatabaseConnection,
-  ConnectionPool
-} from '../types/index.js';
+import type { DatabaseConfig, DatabaseConnection, ConnectionPool } from '../types/index.js';
 import { DEFAULT_CONFIG } from './constants.js';
 import { logger } from './logger.js';
 
@@ -25,12 +21,17 @@ class LibSQLConnection implements DatabaseConnection {
       logger.info('Database connection established', { url: this.config.url });
     } catch (error) {
       this.isConnected = false;
-      logger.error('Failed to establish database connection', { url: this.config.url }, error as Error);
+      logger.error(
+        'Failed to establish database connection',
+        { url: this.config.url },
+        error as Error
+      );
       throw error;
     }
   }
 
-  async execute(query: string, params?: any[]): Promise<ResultSet> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async execute(query: string, params?: any): Promise<ResultSet> {
     if (!this.isConnected) {
       throw new Error('Database connection not established');
     }
@@ -40,9 +41,10 @@ class LibSQLConnection implements DatabaseConnection {
     try {
       logger.debug('Executing query', { query, params });
 
-      const result = params && params.length > 0
-        ? await this.client.execute({ sql: query, args: params })
-        : await this.client.execute(query);
+      const result =
+        params && Array.isArray(params) && params.length > 0
+          ? await this.client.execute({ sql: query, args: params })
+          : await this.client.execute(query);
 
       const executionTime = Date.now() - startTime;
       logger.debug('Query executed successfully', {
@@ -55,11 +57,15 @@ class LibSQLConnection implements DatabaseConnection {
       return result;
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      logger.error('Query execution failed', {
-        query,
-        params,
-        executionTime
-      }, error as Error);
+      logger.error(
+        'Query execution failed',
+        {
+          query,
+          params,
+          executionTime
+        },
+        error as Error
+      );
       throw error;
     }
   }
@@ -209,7 +215,10 @@ class LibSQLConnectionPool implements ConnectionPool {
 
   releaseConnection(connection: DatabaseConnection): void {
     const libsqlConnection = connection as LibSQLConnection;
-    if (this.connections.includes(libsqlConnection) && !this.availableConnections.includes(libsqlConnection)) {
+    if (
+      this.connections.includes(libsqlConnection) &&
+      !this.availableConnections.includes(libsqlConnection)
+    ) {
       this.availableConnections.push(libsqlConnection);
     }
   }
@@ -258,8 +267,23 @@ class LibSQLConnectionPool implements ConnectionPool {
 
     logger.info('Connection pool shutdown complete');
   }
+
+  getStatus(): {
+    totalConnections: number;
+    availableConnections: number;
+    isShuttingDown: boolean;
+    minConnections: number;
+    maxConnections: number;
+  } {
+    return {
+      totalConnections: this.connections.length,
+      availableConnections: this.availableConnections.length,
+      isShuttingDown: this.isShuttingDown,
+      minConnections: this.config.minConnections,
+      maxConnections: this.config.maxConnections
+    };
+  }
 }
 
 export { LibSQLConnection, LibSQLConnectionPool };
 export type { DatabaseConnection, ConnectionPool };
-

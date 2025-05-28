@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "nodemon --exec tsx src/index.ts",
+    "dev": "nodemon --exec \"tsx src/index.ts --dev\"",
     "start": "node dist/index.js",
     "test": "vitest",
     "test:watch": "vitest --watch",

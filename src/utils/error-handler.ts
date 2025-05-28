@@ -6,6 +6,7 @@ export class DatabaseError extends Error {
     message: string,
     public readonly originalError?: Error,
     public readonly query?: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public readonly params?: any[]
   ) {
     super(message);
@@ -45,62 +46,42 @@ export function handleDatabaseError(error: Error, context?: Record<string, unkno
   logger.error('Database operation failed', context, error);
 
   if (error instanceof QueryValidationError) {
-    return new McpError(
-      ErrorCode.InvalidParams,
-      error.message,
-      { query: error.query }
-    );
+    return new McpError(ErrorCode.InvalidParams, error.message, { query: error.query });
   }
 
   if (error instanceof ConnectionError) {
-    return new McpError(
-      ErrorCode.InternalError,
-      'Database connection failed',
-      { originalMessage: error.message }
-    );
+    return new McpError(ErrorCode.InternalError, 'Database connection failed', {
+      originalMessage: error.message
+    });
   }
 
   if (error instanceof QueryTimeoutError) {
-    return new McpError(
-      ErrorCode.InternalError,
-      'Query execution timed out',
-      { query: error.query }
-    );
+    return new McpError(ErrorCode.InternalError, 'Query execution timed out', {
+      query: error.query
+    });
   }
 
   if (error instanceof ResultSizeError) {
-    return new McpError(
-      ErrorCode.InvalidParams,
-      error.message
-    );
+    return new McpError(ErrorCode.InvalidParams, error.message);
   }
 
   if (error instanceof DatabaseError) {
-    return new McpError(
-      ErrorCode.InternalError,
-      error.message,
-      {
-        query: error.query,
-        params: error.params,
-        originalMessage: error.originalError?.message
-      }
-    );
+    return new McpError(ErrorCode.InternalError, error.message, {
+      query: error.query,
+      params: error.params,
+      originalMessage: error.originalError?.message
+    });
   }
 
   // Handle libSQL client errors
   if (error.message.includes('SQLITE_')) {
-    return new McpError(
-      ErrorCode.InvalidParams,
-      `SQL error: ${error.message}`
-    );
+    return new McpError(ErrorCode.InvalidParams, `SQL error: ${error.message}`);
   }
 
   // Generic error fallback
-  return new McpError(
-    ErrorCode.InternalError,
-    'An unexpected database error occurred',
-    { originalMessage: error.message }
-  );
+  return new McpError(ErrorCode.InternalError, 'An unexpected database error occurred', {
+    originalMessage: error.message
+  });
 }
 
 export function withTimeout<T>(
@@ -117,4 +98,3 @@ export function withTimeout<T>(
     })
   ]);
 }
-

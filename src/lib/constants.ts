@@ -47,4 +47,3 @@ export const QUERY_TYPES = {
   DROP: 'DROP',
   PRAGMA: 'PRAGMA'
 } as const;
-

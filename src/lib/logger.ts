@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { appendFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
@@ -42,9 +43,14 @@ class Logger {
     const formattedEntry = this.formatLogEntry(entry);
 
     // Write to console
-    const consoleMethod = entry.level === 'ERROR' ? console.error :
-                         entry.level === 'WARN' ? console.warn :
-                         entry.level === 'DEBUG' ? console.debug : console.log;
+    const consoleMethod =
+      entry.level === 'ERROR'
+        ? console.error
+        : entry.level === 'WARN'
+          ? console.warn
+          : entry.level === 'DEBUG'
+            ? console.debug
+            : console.log;
 
     consoleMethod(formattedEntry.trim());
 
@@ -104,4 +110,3 @@ class Logger {
 
 export const logger = new Logger();
 export { Logger };
-
