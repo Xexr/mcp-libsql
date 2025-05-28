@@ -108,8 +108,9 @@ export abstract class BaseTool {
       for (const [key, value] of Object.entries(shape)) {
         properties[key] = this.zodTypeToJsonSchema(value as z.ZodTypeAny);
 
-        // Check if field is required (not optional)
-        if (!(value as z.ZodTypeAny).isOptional()) {
+        // Check if field is required (not optional and not default)
+        const zodField = value as z.ZodTypeAny;
+        if (!zodField.isOptional() && !(zodField instanceof z.ZodDefault)) {
           required.push(key);
         }
       }
@@ -148,11 +149,32 @@ export abstract class BaseTool {
       return this.zodTypeToJsonSchema(zodType.unwrap());
     }
 
+    if (zodType instanceof z.ZodDefault) {
+      return this.zodTypeToJsonSchema(zodType._def.innerType);
+    }
+
     if (zodType instanceof z.ZodEnum) {
       return {
         type: 'string',
         enum: zodType.options
       };
+    }
+
+    // Handle ZodUnion - convert to anyOf
+    if (zodType instanceof z.ZodUnion) {
+      return {
+        anyOf: zodType.options.map((option: z.ZodTypeAny) => this.zodTypeToJsonSchema(option))
+      };
+    }
+
+    // Handle ZodEffects (refined schemas) - use inner type
+    if (zodType instanceof z.ZodEffects) {
+      return this.zodTypeToJsonSchema(zodType._def.schema);
+    }
+
+    // Handle ZodNull
+    if (zodType instanceof z.ZodNull) {
+      return { type: 'null' };
     }
 
     // Default fallback

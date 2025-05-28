@@ -57,10 +57,12 @@ export class ServerManager {
       // Set up transport and connect
       this.transport = new StdioServerTransport();
 
-      // Add error handling
+      // Add error handling with more detailed logging
       this.server.onerror = (error): void => {
         logger.error('MCP Server error', {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          errorType: typeof error
         });
       };
 
@@ -187,19 +189,20 @@ export class ServerManager {
   private async createToolRegistry(): Promise<ToolRegistry> {
     const { ToolRegistry } = await import('./base-tool.js');
     const { ReadQueryTool } = await import('../tools/read-query.js');
-    const { WriteQueryTool } = await import('../tools/write-query.js');
-    const { CreateTableTool } = await import('../tools/create-table.js');
-    const { AlterTableTool } = await import('../tools/alter-table.js');
-    const { ListTablesTool } = await import('../tools/list-tables.js');
-    const { DescribeTableTool } = await import('../tools/describe-table.js');
+    // Temporarily disable other tools for debugging
+    // const { WriteQueryTool } = await import('../tools/write-query.js');
+    // const { CreateTableTool } = await import('../tools/create-table.js');
+    // const { AlterTableTool } = await import('../tools/alter-table.js');
+    // const { ListTablesTool } = await import('../tools/list-tables.js');
+    // const { DescribeTableTool } = await import('../tools/describe-table.js');
 
     const registry = new ToolRegistry();
     registry.register(new ReadQueryTool());
-    registry.register(new WriteQueryTool());
-    registry.register(new CreateTableTool());
-    registry.register(new AlterTableTool());
-    registry.register(new ListTablesTool());
-    registry.register(new DescribeTableTool());
+    // registry.register(new WriteQueryTool());
+    // registry.register(new CreateTableTool());
+    // registry.register(new AlterTableTool());
+    // registry.register(new ListTablesTool());
+    // registry.register(new DescribeTableTool());
 
     return registry;
   }

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /**
  * Input schema for read-query tool
- * Validates SELECT queries with comprehensive rules
+ * Validates SELECT queries with security measures
  */
 export const ReadQueryInputSchema = z.object({
   query: z
