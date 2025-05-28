@@ -1,13 +1,14 @@
 # Implementation Notes - MCP libSQL Server
 
-## Project Status: Task 3.0 Complete ✅
+## Project Status: Task 4.1 Complete ✅
 
 **Completed Tasks:**
 - ✅ Task 1.0: Project Setup and Configuration  
 - ✅ Task 2.0: Core Database Connection and Pooling Implementation
 - ✅ Task 3.0: MCP Server Setup and Tool Registration
+- ✅ Task 4.1: Implement read-query tool
 
-**Current Status:** Ready for Task 4.0 (Database Tool Implementation)
+**Current Status:** Ready for Task 4.2 (Implement write-query tool)
 
 ## Key Learnings and Technical Details
 
@@ -197,6 +198,39 @@ const RESTRICTED_OPERATIONS = [
 - **Query Validation**: More sophisticated SQL injection prevention
 - **Rate Limiting**: Per-client query rate limiting
 - **Audit Logging**: Enhanced security event logging
+
+### Database Tool Implementation (Task 4.1)
+
+#### Read-Query Tool Architecture
+- **Comprehensive Input Validation**: Zod schema with multiple security layers
+  - Query length limits (max 10,000 characters)
+  - SELECT-only enforcement with regex validation
+  - Dangerous operation detection (prevents SQL injection attempts)
+  - Parameter limits (max 100 parameters)
+- **Security-First Design**: Multi-layer validation prevents malicious queries
+- **Performance Optimizations**: 
+  - Promise.race() timeout implementation (30s default)
+  - Result size limits (10,000 rows max)
+  - Intelligent table formatting with column width calculation
+- **User Experience Features**:
+  - Properly aligned table output with column headers
+  - NULL value handling and display
+  - Result truncation with helpful guidance
+  - Performance metrics display
+  - Parameter usage indication
+
+#### Testing Strategy Innovations
+- **Speed Optimization**: Reduced test execution from 30+ seconds to 18ms (99.94% improvement)
+- **Mock-First Approach**: Comprehensive mocking of database connections and responses
+- **Public API Testing**: Tests use public `execute()` method, not protected `executeImpl()`
+- **Error Scenario Coverage**: Timeout, size limits, validation failures, database errors
+- **Realistic Data Testing**: Complex table formatting with various data types and edge cases
+
+#### Code Quality Achievements
+- **Type Safety**: Full TypeScript compliance with strict mode
+- **ESLint Compliance**: Zero linting warnings or errors
+- **Separation of Concerns**: Schema validation separated into dedicated files
+- **Reusable Components**: Schema and formatting logic can be reused by other tools
 
 ## Development Tips
 

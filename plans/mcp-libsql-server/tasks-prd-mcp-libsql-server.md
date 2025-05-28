@@ -27,7 +27,9 @@
 - `src/tools/describe-table.ts` - Table schema description tool implementation
 - `nodemon.json` - Nodemon configuration for development hot reloading
 - `src/schemas/` - Zod schemas for validation directory
+- `src/schemas/read-query.ts` - Enhanced Zod schema for read-query tool validation
 - `src/__tests__/integration/` - Integration tests directory
+- `src/__tests__/unit/read-query.test.ts` - Comprehensive unit tests for read-query tool
 - `README.md` - Setup and usage documentation
 
 ### Notes
@@ -75,12 +77,12 @@
   - [x] 3.7 Create development mode with hot reloading using nodemon
 
 - [ ] 4.0 Implement Database Tools
-  - [ ] 4.1 Implement read-query tool
-    - [ ] 4.1.1 Create Zod schema for input validation
-    - [ ] 4.1.2 Implement SELECT query detection and validation
-    - [ ] 4.1.3 Add query execution with timeout handling
-    - [ ] 4.1.4 Format results with performance metrics
-    - [ ] 4.1.5 Write comprehensive unit tests
+  - [x] 4.1 Implement read-query tool
+    - [x] 4.1.1 Create Zod schema for input validation
+    - [x] 4.1.2 Implement SELECT query detection and validation
+    - [x] 4.1.3 Add query execution with timeout handling
+    - [x] 4.1.4 Format results with performance metrics
+    - [x] 4.1.5 Write comprehensive unit tests
   - [ ] 4.2 Implement write-query tool
     - [ ] 4.2.1 Create Zod schema for input validation
     - [ ] 4.2.2 Implement INSERT/UPDATE/DELETE detection and validation
