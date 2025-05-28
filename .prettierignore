@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+*.log
+*.md
+package.json
+tsconfig.json
+.gitignore

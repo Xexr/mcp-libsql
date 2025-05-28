@@ -1,0 +1,52 @@
+{
+  "name": "xexr-libsql",
+  "version": "1.0.0",
+  "description": "MCP server for libSQL database operations",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "main": "dist/index.js",
+  "bin": {
+    "xexr-libsql": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "nodemon --exec tsx src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts"
+  },
+  "keywords": [
+    "mcp",
+    "libsql",
+    "database",
+    "sql",
+    "ai",
+    "model-context-protocol"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@libsql/client": "^0.15.7",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.25.32"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.23",
+    "@typescript-eslint/eslint-plugin": "^8.33.0",
+    "@typescript-eslint/parser": "^8.33.0",
+    "@vitest/coverage-v8": "^3.1.4",
+    "eslint": "^9.27.0",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.5.3",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4"
+  }
+}
