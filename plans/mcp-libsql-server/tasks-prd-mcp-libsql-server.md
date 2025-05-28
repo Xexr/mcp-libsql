@@ -7,6 +7,7 @@
 - `.prettierrc` - Prettier configuration for code formatting
 - `.prettierignore` - Prettier ignore file
 - `vitest.config.ts` - Vitest configuration with coverage settings
+- `plans/mcp-libsql-server/implementation-notes.md` - Key learnings, technical details, and architecture decisions
 - `src/index.ts` - Main entry point for MCP server (placeholder)
 - `src/types/index.ts` - TypeScript type definitions for database, logging, and metrics
 - `src/lib/constants.ts` - Configuration constants, restricted operations, and query types
@@ -27,6 +28,7 @@
 - Integration tests are saved in `src/__tests__/integration`
 - All tools follow MCP protocol specifications
 - Connection pooling uses libSQL client library features
+- **Implementation Details**: See `implementation-notes.md` for technical learnings, architecture decisions, and development insights from Tasks 1.0 and 2.0
 
 ## Tasks
 
