@@ -237,6 +237,11 @@ async function main(): Promise<void> {
         }
       }
     });
+
+    // Keep the process alive to handle MCP communication
+    // The server is now running and will handle requests via stdio
+    // We need to prevent the main function from exiting
+    process.stdin.resume();
   } catch (error) {
     logger.error('Failed to start MCP libSQL Server', {
       error: error instanceof Error ? error.message : String(error)
