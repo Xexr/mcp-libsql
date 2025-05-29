@@ -19,6 +19,7 @@ interface CLIOptions {
 }
 
 function showHelp(): void {
+  // eslint-disable-next-line no-console
   console.log(`
 MCP libSQL Server
 
@@ -47,6 +48,7 @@ Development:
 
 async function showVersion(): Promise<void> {
   const packageJson = await import('../package.json', { with: { type: 'json' } });
+  // eslint-disable-next-line no-console
   console.log(`mcp-libsql-server v${packageJson.default.version}`);
 }
 
@@ -69,16 +71,24 @@ function parseCliArgs(): CLIOptions {
 
     return {
       url: values.url || '',
-      minConnections: values['min-connections'] ? parseInt(values['min-connections'], 10) : undefined,
-      maxConnections: values['max-connections'] ? parseInt(values['max-connections'], 10) : undefined,
-      connectionTimeout: values['connection-timeout'] ? parseInt(values['connection-timeout'], 10) : undefined,
+      minConnections: values['min-connections']
+        ? parseInt(values['min-connections'], 10)
+        : undefined,
+      maxConnections: values['max-connections']
+        ? parseInt(values['max-connections'], 10)
+        : undefined,
+      connectionTimeout: values['connection-timeout']
+        ? parseInt(values['connection-timeout'], 10)
+        : undefined,
       queryTimeout: values['query-timeout'] ? parseInt(values['query-timeout'], 10) : undefined,
       dev: values.dev,
       help: values.help,
       version: values.version
     };
   } catch (error) {
-    logger.error('Failed to parse CLI arguments', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Failed to parse CLI arguments', {
+      error: error instanceof Error ? error.message : String(error)
+    });
     showHelp();
     process.exit(1);
   }
@@ -102,27 +112,43 @@ async function validateOptions(options: CLIOptions): Promise<DatabaseConfig> {
   }
 
   // Validate numeric options
-  if (options.minConnections !== undefined && (options.minConnections < 1 || !Number.isInteger(options.minConnections))) {
+  if (
+    options.minConnections !== undefined &&
+    (options.minConnections < 1 || !Number.isInteger(options.minConnections))
+  ) {
     logger.error('min-connections must be a positive integer');
     process.exit(1);
   }
 
-  if (options.maxConnections !== undefined && (options.maxConnections < 1 || !Number.isInteger(options.maxConnections))) {
+  if (
+    options.maxConnections !== undefined &&
+    (options.maxConnections < 1 || !Number.isInteger(options.maxConnections))
+  ) {
     logger.error('max-connections must be a positive integer');
     process.exit(1);
   }
 
-  if (options.minConnections !== undefined && options.maxConnections !== undefined && options.minConnections > options.maxConnections) {
+  if (
+    options.minConnections !== undefined &&
+    options.maxConnections !== undefined &&
+    options.minConnections > options.maxConnections
+  ) {
     logger.error('min-connections cannot be greater than max-connections');
     process.exit(1);
   }
 
-  if (options.connectionTimeout !== undefined && (options.connectionTimeout < 1000 || !Number.isInteger(options.connectionTimeout))) {
+  if (
+    options.connectionTimeout !== undefined &&
+    (options.connectionTimeout < 1000 || !Number.isInteger(options.connectionTimeout))
+  ) {
     logger.error('connection-timeout must be an integer >= 1000ms');
     process.exit(1);
   }
 
-  if (options.queryTimeout !== undefined && (options.queryTimeout < 1000 || !Number.isInteger(options.queryTimeout))) {
+  if (
+    options.queryTimeout !== undefined &&
+    (options.queryTimeout < 1000 || !Number.isInteger(options.queryTimeout))
+  ) {
     logger.error('query-timeout must be an integer >= 1000ms');
     process.exit(1);
   }
@@ -131,26 +157,27 @@ async function validateOptions(options: CLIOptions): Promise<DatabaseConfig> {
     url: options.url,
     ...(options.minConnections !== undefined && { minConnections: options.minConnections }),
     ...(options.maxConnections !== undefined && { maxConnections: options.maxConnections }),
-    ...(options.connectionTimeout !== undefined && { connectionTimeout: options.connectionTimeout }),
+    ...(options.connectionTimeout !== undefined && {
+      connectionTimeout: options.connectionTimeout
+    }),
     ...(options.queryTimeout !== undefined && { queryTimeout: options.queryTimeout })
   };
 
   return config;
 }
 
-
 async function main(): Promise<void> {
   let serverManager: ServerManager | null = null;
-  
+
   try {
     logger.info('Starting MCP libSQL Server');
-    
+
     const options = parseCliArgs();
     const config = await validateOptions(options);
-    
+
     const isDevelopment = options.dev || process.env['NODE_ENV'] === 'development';
-    
-    logger.info('Configuration validated', { 
+
+    logger.info('Configuration validated', {
       url: config.url,
       minConnections: config.minConnections,
       maxConnections: config.maxConnections,
@@ -160,81 +187,82 @@ async function main(): Promise<void> {
     });
 
     // Create and start server manager
-    serverManager = new ServerManager({ 
+    serverManager = new ServerManager({
       config,
       developmentMode: isDevelopment,
       enableHotReload: isDevelopment
     });
     await serverManager.start();
-    
+
     logger.info('MCP libSQL Server started successfully');
-    
+
     // Log server status
     const status = serverManager.getStatus();
     logger.info('Server status', status);
-    
+
     // Set up graceful shutdown
-    const gracefulShutdown = async (signal: string) => {
+    const gracefulShutdown = async (signal: string): Promise<void> => {
       logger.info(`Received ${signal}, shutting down gracefully`);
-      
+
       if (serverManager && serverManager.isServerRunning()) {
         try {
           await serverManager.stop();
           logger.info('Server manager stopped successfully');
         } catch (error) {
-          logger.error('Error stopping server manager', { 
-            error: error instanceof Error ? error.message : String(error) 
+          logger.error('Error stopping server manager', {
+            error: error instanceof Error ? error.message : String(error)
           });
         }
       }
-      
+
       process.exit(0);
     };
 
     // Set up signal handlers
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
     process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    
+
     // Optional: Set up SIGUSR1 for reload (development feature)
     process.on('SIGUSR1', async () => {
       logger.info('Received SIGUSR1, reloading server');
-      
+
       if (serverManager) {
         try {
           await serverManager.reload();
           logger.info('Server reloaded successfully');
         } catch (error) {
-          logger.error('Error reloading server', { 
-            error: error instanceof Error ? error.message : String(error) 
+          logger.error('Error reloading server', {
+            error: error instanceof Error ? error.message : String(error)
           });
         }
       }
     });
-    
   } catch (error) {
-    logger.error('Failed to start MCP libSQL Server', { 
-      error: error instanceof Error ? error.message : String(error) 
+    logger.error('Failed to start MCP libSQL Server', {
+      error: error instanceof Error ? error.message : String(error)
     });
-    
+
     // Clean up on startup failure
     if (serverManager) {
       try {
         await serverManager.stop();
       } catch (cleanupError) {
-        logger.error('Error during cleanup', { 
-          error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError) 
+        logger.error('Error during cleanup', {
+          error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError)
         });
       }
     }
-    
+
     process.exit(1);
   }
 }
 
 // Start the server
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch((error) => {
-    logger.error('Unhandled error in main', { error: error instanceof Error ? error.message : String(error) });
+  main().catch(error => {
+    logger.error('Unhandled error in main', {
+      error: error instanceof Error ? error.message : String(error)
+    });
     process.exit(1);
   });
 }
