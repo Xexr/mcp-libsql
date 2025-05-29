@@ -14,7 +14,7 @@
     "build": "tsc && chmod 755 dist/index.js",
     "dev": "nodemon --exec \"tsx src/index.ts --dev\"",
     "start": "node dist/index.js",
-    "test": "vitest",
+    "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "typecheck": "tsc --noEmit",

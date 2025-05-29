@@ -1,1 +1,1 @@
-run the test (via "pnpm test:run $ARGUMENTS") and resolve any issues you find
+run the test (via "pnpm test $ARGUMENTS") and resolve any issues you find
