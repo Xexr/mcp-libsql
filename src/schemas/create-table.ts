@@ -55,6 +55,15 @@ export const CreateTableInputSchema = z.object({
     )
     .refine(
       query => {
+        // Check for multi-statement patterns - semicolon is the key indicator
+        return !query.includes(';');
+      },
+      {
+        message: 'Multi-statement queries are not allowed'
+      }
+    )
+    .refine(
+      query => {
         // Basic CREATE TABLE syntax validation
         const lowerQuery = query.toLowerCase();
         // Must contain table name and column definitions

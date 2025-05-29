@@ -58,6 +58,15 @@ export const AlterTableInputSchema = z.object({
     )
     .refine(
       query => {
+        // Check for multi-statement patterns - semicolon is the key indicator
+        return !query.includes(';');
+      },
+      {
+        message: 'Multi-statement queries are not allowed'
+      }
+    )
+    .refine(
+      query => {
         // Basic ALTER TABLE syntax validation
         const lowerQuery = query.toLowerCase();
         // Must contain valid ALTER TABLE operations
