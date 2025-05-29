@@ -125,3 +125,57 @@
   - [ ] 5.7 Add troubleshooting guide for common issues
   - [ ] 5.8 Perform final validation against all acceptance criteria
   - [ ] 5.9 Ensure 80% test coverage target is met
+
+## Future Enhancement Tasks (Post-MVP)
+
+### 6.0 libSQL Advanced Features
+  - [ ] 6.1 Implement transaction support in write-query tool
+    - [ ] 6.1.1 Add transaction mode parameter to write-query schema
+    - [ ] 6.1.2 Implement client.transaction() usage with commit/rollback
+    - [ ] 6.1.3 Add transaction error handling and recovery
+    - [ ] 6.1.4 Write comprehensive transaction tests
+    - [ ] 6.1.5 Document transaction usage patterns
+  - [ ] 6.2 Add batch operations support
+    - [ ] 6.2.1 Create batch-query tool for multiple statement execution
+    - [ ] 6.2.2 Implement client.batch() API usage
+    - [ ] 6.2.3 Add batch validation and error handling
+    - [ ] 6.2.4 Optimize performance for bulk operations
+    - [ ] 6.2.5 Write batch operation tests
+  - [ ] 6.3 Add authentication support for Turso databases
+    - [ ] 6.3.1 Add --auth-token CLI parameter
+    - [ ] 6.3.2 Implement secure token handling and validation
+    - [ ] 6.3.3 Add environment variable support for tokens
+    - [ ] 6.3.4 Update connection configuration for auth
+    - [ ] 6.3.5 Document Turso authentication setup
+
+### 7.0 MCP Advanced Features
+  - [ ] 7.1 Implement MCP resources for database metadata
+    - [ ] 7.1.1 Create schema resource for database structure exposure
+    - [ ] 7.1.2 Add table metadata resources
+    - [ ] 7.1.3 Implement query result caching as resources
+    - [ ] 7.1.4 Add resource discovery and listing
+    - [ ] 7.1.5 Write resource integration tests
+  - [ ] 7.2 Enhanced error classification and reporting
+    - [ ] 7.2.1 Implement granular MCP error codes
+    - [ ] 7.2.2 Add context-aware error messages
+    - [ ] 7.2.3 Improve error recovery suggestions
+    - [ ] 7.2.4 Add error analytics and monitoring
+    - [ ] 7.2.5 Document error handling patterns
+  - [ ] 7.3 Consider McpServer migration for utility tools
+    - [ ] 7.3.1 Evaluate benefits of high-level McpServer API
+    - [ ] 7.3.2 Create proof-of-concept simple tools with McpServer
+    - [ ] 7.3.3 Compare performance and maintainability
+    - [ ] 7.3.4 Plan migration strategy if beneficial
+    - [ ] 7.3.5 Update documentation for dual approaches
+
+## Enhancement Priority Matrix
+
+### High Priority (Next Release)
+1. **Transaction Support** (6.1) - Critical for data integrity
+2. **Batch Operations** (6.2) - Significant performance improvement
+3. **Enhanced Error Classification** (7.2) - Better user experience
+
+### Medium Priority (Future Versions)
+1. **Authentication Support** (6.3) - Enterprise readiness
+2. **MCP Resources** (7.1) - Enhanced protocol utilization
+3. **McpServer Evaluation** (7.3) - Architecture optimization
