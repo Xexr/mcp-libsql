@@ -1,30 +1,33 @@
-import { z } from 'zod';
 import { BaseTool, type ToolExecutionContext, type ToolExecutionResult } from '../lib/base-tool.js';
 import { formatPerformanceMetrics } from '../utils/performance.js';
-
-const DescribeTableInputSchema = z.object({
-  tableName: z.string().min(1, 'Table name cannot be empty')
-});
+import { DescribeTableInputSchema, type DescribeTableInput } from '../schemas/describe-table.js';
 
 export class DescribeTableTool extends BaseTool {
   readonly name = 'describe-table';
-  readonly description = 'Get schema information for a specific table';
+  readonly description =
+    'Get comprehensive schema information for a specific table including columns, indexes, foreign keys, and constraints. Supports both human-readable and JSON output formats.';
   readonly inputSchema = DescribeTableInputSchema;
 
   protected async executeImpl(context: ToolExecutionContext): Promise<ToolExecutionResult> {
-    const { tableName } = context.arguments as z.infer<typeof DescribeTableInputSchema>;
+    const { tableName, includeIndexes, includeForeignKeys, format } =
+      context.arguments as DescribeTableInput;
 
     try {
       const startTime = Date.now();
 
+      // Sanitize table name for PRAGMA queries
+      const sanitizedTableName = this.sanitizeTableName(tableName);
+
       // First check if table exists
       const tableExistsQuery = `
-        SELECT name 
+        SELECT name, sql
         FROM sqlite_master 
         WHERE type='table' AND name=?
       `;
 
-      const tableExistsResult = await context.connection.execute(tableExistsQuery, [tableName]);
+      const tableExistsResult = await context.connection.execute(tableExistsQuery, [
+        sanitizedTableName
+      ]);
 
       if (tableExistsResult.rows.length === 0) {
         return {
@@ -39,12 +42,42 @@ export class DescribeTableTool extends BaseTool {
       }
 
       // Get table schema information
-      const schemaQuery = `PRAGMA table_info(${tableName})`;
+      const schemaQuery = `PRAGMA table_info("${sanitizedTableName}")`;
       const schemaResult = await context.connection.execute(schemaQuery);
 
-      // Get table indexes
-      const indexQuery = `PRAGMA index_list(${tableName})`;
-      const indexResult = await context.connection.execute(indexQuery);
+      const tableInfo = {
+        name: sanitizedTableName,
+        sql: tableExistsResult.rows[0].sql as string,
+        columns: schemaResult.rows,
+        indexes: [] as Array<Record<string, unknown>>,
+        foreignKeys: [] as Array<Record<string, unknown>>
+      };
+
+      // Get table indexes if requested
+      if (includeIndexes) {
+        const indexQuery = `PRAGMA index_list("${sanitizedTableName}")`;
+        const indexResult = await context.connection.execute(indexQuery);
+
+        for (const index of indexResult.rows) {
+          const indexInfoQuery = `PRAGMA index_info("${index.name}")`;
+          const indexInfoResult = await context.connection.execute(indexInfoQuery);
+
+          tableInfo.indexes.push({
+            name: index.name,
+            unique: index.unique,
+            origin: index.origin,
+            partial: index.partial,
+            columns: indexInfoResult.rows
+          });
+        }
+      }
+
+      // Get foreign keys if requested
+      if (includeForeignKeys) {
+        const foreignKeyQuery = `PRAGMA foreign_key_list("${sanitizedTableName}")`;
+        const foreignKeyResult = await context.connection.execute(foreignKeyQuery);
+        tableInfo.foreignKeys = foreignKeyResult.rows;
+      }
 
       const executionTime = Date.now() - startTime;
 
@@ -52,36 +85,81 @@ export class DescribeTableTool extends BaseTool {
         executionTime
       });
 
-      let output = `Table: ${tableName}\n\n`;
+      if (format === 'json') {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  table: tableInfo,
+                  metadata: {
+                    executionTime,
+                    timestamp: new Date().toISOString()
+                  }
+                },
+                null,
+                2
+              )
+            }
+          ]
+        };
+      }
+
+      // Format as human-readable table
+      let output = `Table: ${sanitizedTableName}\n\n`;
+
+      // Display CREATE statement if available
+      if (tableInfo.sql) {
+        output += 'CREATE Statement:\n';
+        output += `${tableInfo.sql}\n\n`;
+      }
 
       // Display columns
       output += 'Columns:\n';
-      output += 'Name\tType\tNot Null\tDefault\tPrimary Key\n';
-      output += '----\t----\t--------\t-------\t-----------\n';
+      output += '┌─────────────────┬─────────────────┬─────────┬─────────────┬─────────────┐\n';
+      output += '│ Name            │ Type            │ Not Null│ Default     │ Primary Key │\n';
+      output += '├─────────────────┼─────────────────┼─────────┼─────────────┼─────────────┤\n';
 
       for (const row of schemaResult.rows) {
-        const name = row.name || '';
-        const type = row.type || '';
-        const notNull = row.notnull ? 'YES' : 'NO';
-        const defaultValue = row.dflt_value || '';
-        const primaryKey = row.pk ? 'YES' : 'NO';
+        const name = String(row.name || '').padEnd(15);
+        const type = String(row.type || '').padEnd(15);
+        const notNull = (row.notnull ? 'YES' : 'NO').padEnd(7);
+        const defaultValue = String(row.dflt_value || '').padEnd(11);
+        const primaryKey = (row.pk ? 'YES' : 'NO').padEnd(11);
 
-        output += `${name}\t${type}\t${notNull}\t${defaultValue}\t${primaryKey}\n`;
+        output += `│ ${name} │ ${type} │ ${notNull} │ ${defaultValue} │ ${primaryKey} │\n`;
       }
+      output += '└─────────────────┴─────────────────┴─────────┴─────────────┴─────────────┘\n\n';
 
-      // Display indexes if any
-      if (indexResult.rows.length > 0) {
-        output += '\nIndexes:\n';
-        for (const row of indexResult.rows) {
-          const indexName = row.name || '';
-          const unique = row.unique ? 'UNIQUE' : 'INDEX';
-          output += `- ${indexName} (${unique})\n`;
+      // Display indexes if requested and available
+      if (includeIndexes && tableInfo.indexes.length > 0) {
+        output += 'Indexes:\n';
+        for (const index of tableInfo.indexes) {
+          const indexRecord = index as Record<string, unknown>;
+          const indexType = indexRecord['unique'] ? 'UNIQUE INDEX' : 'INDEX';
+          const columns = indexRecord['columns'] as Array<Record<string, unknown>>;
+          const columnNames = columns.map(col => col['name']).join(', ');
+          output += `- ${indexRecord['name']} (${indexType}) on (${columnNames})\n`;
         }
-      } else {
-        output += '\nNo indexes found.\n';
+        output += '\n';
+      } else if (includeIndexes) {
+        output += 'No indexes found.\n\n';
       }
 
-      output += `\n${metrics}`;
+      // Display foreign keys if requested and available
+      if (includeForeignKeys && tableInfo.foreignKeys.length > 0) {
+        output += 'Foreign Keys:\n';
+        for (const fk of tableInfo.foreignKeys) {
+          const fkRecord = fk as Record<string, unknown>;
+          output += `- ${fkRecord['from']} → ${fkRecord['table']}.${fkRecord['to']} (${fkRecord['on_update']}/${fkRecord['on_delete']})\n`;
+        }
+        output += '\n';
+      } else if (includeForeignKeys) {
+        output += 'No foreign keys found.\n\n';
+      }
+
+      output += `${metrics}`;
 
       return {
         content: [
@@ -103,5 +181,13 @@ export class DescribeTableTool extends BaseTool {
         isError: true
       };
     }
+  }
+
+  /**
+   * Sanitize table name for safe use in PRAGMA queries
+   */
+  private sanitizeTableName(tableName: string): string {
+    // Remove quotes if present and validate
+    return tableName.replace(/^["'`[]|["'`]]$/g, '');
   }
 }

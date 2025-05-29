@@ -191,18 +191,17 @@ export class ServerManager {
     const { ReadQueryTool } = await import('../tools/read-query.js');
     const { WriteQueryTool } = await import('../tools/write-query.js');
     const { CreateTableTool } = await import('../tools/create-table.js');
-    // Temporarily disable other tools until they are completed
-    // const { AlterTableTool } = await import('../tools/alter-table.js');
-    // const { ListTablesTool } = await import('../tools/list-tables.js');
-    // const { DescribeTableTool } = await import('../tools/describe-table.js');
+    const { AlterTableTool } = await import('../tools/alter-table.js');
+    const { ListTablesTool } = await import('../tools/list-tables.js');
+    const { DescribeTableTool } = await import('../tools/describe-table.js');
 
     const registry = new ToolRegistry();
     registry.register(new ReadQueryTool());
     registry.register(new WriteQueryTool());
     registry.register(new CreateTableTool());
-    // registry.register(new AlterTableTool());
-    // registry.register(new ListTablesTool());
-    // registry.register(new DescribeTableTool());
+    registry.register(new AlterTableTool());
+    registry.register(new ListTablesTool());
+    registry.register(new DescribeTableTool());
 
     return registry;
   }
