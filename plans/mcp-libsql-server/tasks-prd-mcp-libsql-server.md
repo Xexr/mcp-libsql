@@ -41,6 +41,8 @@
 - `src/__tests__/unit/describe-table.test.ts` - Comprehensive unit tests for describe-table tool with schema inspection testing
 - `src/__tests__/unit/list-tables.test.ts` - Comprehensive unit tests for list-tables tool with metadata querying testing
 - `src/__tests__/integration/end-to-end.test.ts` - Comprehensive integration tests for end-to-end scenarios with real database operations
+- `src/__tests__/unit/audit-trail.test.ts` - Audit trail logging tests to verify database operations are properly logged for security compliance
+- `src/__tests__/unit/connection-retry.test.ts` - Connection failure and retry scenario tests for connection pool resilience and recovery
 - `README.md` - Setup and usage documentation
 
 ### Notes
@@ -129,8 +131,8 @@
 
 - [ ] 5.0 Testing, Documentation and Final Validation
   - [x] 5.1 Create integration tests for end-to-end scenarios
-  - [ ] 5.2 Add logging tests to verify audit trail
-  - [ ] 5.3 Test connection failure and retry scenarios
+  - [x] 5.2 Add logging tests to verify audit trail
+  - [x] 5.3 Test connection failure and retry scenarios
   - [ ] 5.4 Verify security measures (SQL injection prevention)
   - [ ] 5.5 Write comprehensive README with setup instructions
   - [ ] 5.6 Document all tools with examples and expected outputs
