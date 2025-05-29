@@ -28,6 +28,8 @@ export interface WriteResult {
 export interface DatabaseConnection {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   execute: (query: string, params?: any) => Promise<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  transaction: <T>(fn: (tx: any) => Promise<T>) => Promise<T>;
   close: () => Promise<void>;
   isHealthy: () => Promise<boolean>;
 }

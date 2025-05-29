@@ -70,6 +70,43 @@ class LibSQLConnection implements DatabaseConnection {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async transaction<T>(fn: (tx: any) => Promise<T>): Promise<T> {
+    if (!this.isConnected) {
+      throw new Error('Database connection not established');
+    }
+
+    const startTime = Date.now();
+    let tx;
+
+    try {
+      logger.debug('Starting transaction');
+
+      tx = await this.client.transaction('write');
+      const result = await fn(tx);
+      await tx.commit();
+
+      const executionTime = Date.now() - startTime;
+      logger.debug('Transaction committed successfully', { executionTime });
+
+      return result;
+    } catch (error) {
+      const executionTime = Date.now() - startTime;
+
+      if (tx) {
+        try {
+          await tx.rollback();
+          logger.debug('Transaction rolled back due to error', { executionTime });
+        } catch (rollbackError) {
+          logger.error('Failed to rollback transaction', {}, rollbackError as Error);
+        }
+      }
+
+      logger.error('Transaction failed and rolled back', { executionTime }, error as Error);
+      throw error;
+    }
+  }
+
   async close(): Promise<void> {
     try {
       this.client.close();
