@@ -570,13 +570,12 @@ sqlite3 /tmp/test.db "SELECT 1"
 - ✅ **libSQL usage optimal** - exceeding basic requirements
 
 #### Short-term Enhancements (Next 1-2 versions)
-1. **Transaction Support**: Add to write-query tool for data consistency
-2. **Batch Operations**: Enhance performance for multi-statement operations
-3. **Authentication**: Add Turso auth token support
+1. **Batch Operations**: Enhance performance for multi-statement operations
+2. **Authentication**: Add Turso auth token support
 
 #### Long-term Enhancements (Future versions)
 1. **MCP Resources**: Add schema and metadata exposure
-3. **High-level Tools**: Use McpServer for simple utility tools
+2. **High-level Tools**: Use McpServer for simple utility tools
 
 ### Quality Assurance
 - **MCP Standards**: Implementation verified against official TypeScript SDK documentation
