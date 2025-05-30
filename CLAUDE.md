@@ -69,8 +69,8 @@ pnpm test <filename>   # Run tests for a specific file
 
 Documentation is in the `docs` directory:
 
-- `docs/mcp-docs.txt` - complete MCP protocol documentation
-- `docs/typescript-sdk.md` - TypeScript SDK documentation
+- `docs/mcp/mcp-docs.txt` - complete MCP protocol documentation
+- `docs/mcp/typescript-sdk.md` - TypeScript SDK documentation
 - `docs/libsql/` - LibSQL documentation for the spec and client
 
 # Plans
