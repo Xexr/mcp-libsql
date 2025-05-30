@@ -47,9 +47,27 @@ Development:
 }
 
 async function showVersion(): Promise<void> {
-  const packageJson = await import('../package.json', { with: { type: 'json' } });
-  // eslint-disable-next-line no-console
-  console.log(`mcp-libsql-server v${packageJson.default.version}`);
+  try {
+    // Use fs to read package.json for better compatibility
+    const { readFile } = await import('fs/promises');
+    const { join } = await import('path');
+    const { fileURLToPath } = await import('url');
+    const { dirname } = await import('path');
+    
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const packagePath = join(__dirname, '..', 'package.json');
+    
+    const packageContent = await readFile(packagePath, 'utf-8');
+    const packageJson = JSON.parse(packageContent);
+    
+    // eslint-disable-next-line no-console
+    console.log(`mcp-libsql-server v${packageJson.version}`);
+  } catch (error) {
+    // Fallback if reading package.json fails
+    // eslint-disable-next-line no-console
+    console.log('mcp-libsql-server v1.0.0');
+  }
 }
 
 function parseCliArgs(): CLIOptions {
@@ -171,6 +189,10 @@ async function main(): Promise<void> {
 
   try {
     logger.info('Starting MCP libSQL Server');
+    logger.info(`Node.js version: ${process.version}`);
+    logger.info(`Platform: ${process.platform} ${process.arch}`);
+    // Log where we're writing logs for easy access
+    console.error(`Log file location: ${logger.getLogFilePath()}`);
 
     const options = parseCliArgs();
     const config = await validateOptions(options);

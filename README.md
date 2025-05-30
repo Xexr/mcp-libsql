@@ -104,12 +104,12 @@ Configure the MCP server in Claude Desktop based on your operating system:
 }
 ```
 
-**Alternative with absolute path:**
+**Recommended configuration with explicit Node.js path:**
 ```json
 {
   "mcpServers": {
     "libsql": {
-      "command": "/usr/local/bin/node",
+      "command": "/Users/username/.nvm/versions/node/v20.13.1/bin/node",
       "args": [
         "/Users/username/projects/mcp-libsql-server/dist/index.js",
         "--url", 
@@ -119,6 +119,13 @@ Configure the MCP server in Claude Desktop based on your operating system:
   }
 }
 ```
+
+**Alternative system paths:**
+- Homebrew (Intel): `/usr/local/bin/node`
+- Homebrew (Apple Silicon): `/opt/homebrew/bin/node`
+- Official installer: `/usr/local/bin/node`
+
+**Important**: On macOS, Claude Desktop doesn't inherit your shell environment. If you use nvm, you must specify the full path to your Node.js installation. Use `which node` in terminal to find your current Node.js path.
 
 #### **Linux Configuration**
 
@@ -524,7 +531,43 @@ pnpm typecheck
    - Check WSL2 is running: `wsl -l -v` in PowerShell
    - Verify configuration file path: `%APPDATA%\Claude\claude_desktop_config.json`
 
-5. **Tools Not Available in Claude Desktop**
+5. **Node.js Version Compatibility Issues (macOS)**
+   ```
+   SyntaxError: Unexpected token '??='
+   ```
+   **Problem**: Claude Desktop on macOS doesn't inherit your shell environment and may use an older Node.js version that doesn't support modern JavaScript syntax.
+   
+   **Diagnosis**: Check what Node.js version Claude Desktop is using by temporarily updating your config to run this command:
+   ```json
+   {
+     "mcpServers": {
+       "libsql": {
+         "command": "node",
+         "args": ["-e", "console.error(`Node.js version: ${process.version}`)"]
+       }
+     }
+   }
+   ```
+   
+   **Solutions**:
+   - **Use explicit Node.js path** (Recommended):
+     ```json
+     {
+       "mcpServers": {
+         "libsql": {
+           "command": "/Users/username/.nvm/versions/node/v20.13.1/bin/node",
+           "args": ["/path/to/mcp-libsql-server/dist/index.js", "--url", "file:///path/to/database.db"]
+         }
+       }
+     }
+     ```
+   - **Find your current Node.js path**: Run `which node` in terminal to get the full path
+   - **Alternative system paths**: 
+     - Homebrew Intel: `/usr/local/bin/node`
+     - Homebrew Apple Silicon: `/opt/homebrew/bin/node`
+     - Official installer: `/usr/local/bin/node`
+
+6. **Tools Not Available in Claude Desktop**
    ```
    No database tools available
    ```
@@ -539,7 +582,7 @@ pnpm typecheck
    - **Linux**: Check file permissions and ensure Claude Desktop has access to the file paths
    - **Windows/WSL2**: Ensure database path is accessible from WSL2 environment
 
-6. **JSON Parsing Warnings (Expected and Harmless)**
+7. **JSON Parsing Warnings (Expected and Harmless)**
    ```
    Expected ',' or ']' after array element in JSON at position 5
    ```
@@ -551,7 +594,7 @@ pnpm typecheck
 
 ### **Database Connection Issues**
 
-7. **Connection Refused**
+8. **Connection Refused**
    ```
    Error: Connection refused to http://127.0.0.1:8080
    ```
@@ -561,7 +604,7 @@ pnpm typecheck
    - Test with file database: `file:///tmp/test.db`
    - Ensure database is accessible from WSL2 if using Windows
 
-8. **File Database Permissions**
+9. **File Database Permissions**
    ```
    Error: SQLITE_CANTOPEN: unable to open database file
    ```
@@ -572,7 +615,7 @@ pnpm typecheck
 
 ### **Query Execution Issues**
 
-9. **Query Validation Errors**
+10. **Query Validation Errors**
    ```
    Error: Only SELECT queries are allowed
    ```
@@ -584,7 +627,7 @@ pnpm typecheck
      - `alter-table`: ALTER TABLE only
    - Check for prohibited operations or system table access
 
-10. **Transaction Failures**
+11. **Transaction Failures**
     ```
     Error: Transaction rolled back due to constraint violation
     ```
@@ -595,7 +638,7 @@ pnpm typecheck
 
 ### **Performance Issues**
 
-11. **Slow Query Performance**
+12. **Slow Query Performance**
     ```
     Query execution time > 30 seconds
     ```
@@ -605,7 +648,7 @@ pnpm typecheck
     - Check database file size and consider optimization
     - Monitor connection pool health
 
-12. **Memory Issues with Large Results**
+13. **Memory Issues with Large Results**
     ```
     Error: Result set too large (> 10,000 rows)
     ```
@@ -616,7 +659,7 @@ pnpm typecheck
 
 ### **Development Issues**
 
-13. **Hot Reload Not Working**
+14. **Hot Reload Not Working**
     ```
     pnpm dev not detecting file changes
     ```
@@ -625,7 +668,7 @@ pnpm typecheck
     - Restart development server: `Ctrl+C` then `pnpm dev`
     - Clear Node.js cache: `rm -rf node_modules/.cache`
 
-14. **Test Failures**
+15. **Test Failures**
     ```
     Tests failing with connection errors
     ```

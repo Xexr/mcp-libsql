@@ -10,7 +10,7 @@ export const ReadQueryInputSchema = z.object({
     .min(1, 'Query cannot be empty')
     .max(10000, 'Query too long (max 10,000 characters)')
     .refine(
-      (query) => {
+      query => {
         const trimmed = query.trim().toLowerCase();
         return trimmed.startsWith('select');
       },
@@ -19,7 +19,7 @@ export const ReadQueryInputSchema = z.object({
       }
     )
     .refine(
-      (query) => {
+      query => {
         // Check for common dangerous patterns
         const dangerous = [
           'pragma',
@@ -49,14 +49,9 @@ export const ReadQueryInputSchema = z.object({
       }
     )
     .refine(
-      (query) => {
+      query => {
         // Check for system table access
-        const systemTables = [
-          'sqlite_master',
-          'sqlite_temp_master', 
-          'sqlite_sequence',
-          'pragma_'
-        ];
+        const systemTables = ['sqlite_master', 'sqlite_temp_master', 'sqlite_sequence', 'pragma_'];
         const lowerQuery = query.toLowerCase();
         return !systemTables.some(table => lowerQuery.includes(table));
       },
@@ -65,7 +60,7 @@ export const ReadQueryInputSchema = z.object({
       }
     )
     .refine(
-      (query) => {
+      query => {
         // Check for multi-statement patterns - semicolon is the key indicator
         return !query.includes(';');
       },
@@ -77,12 +72,9 @@ export const ReadQueryInputSchema = z.object({
     .array(z.union([z.string(), z.number(), z.boolean(), z.null()]))
     .optional()
     .default([])
-    .refine(
-      (params) => params.length <= 100,
-      {
-        message: 'Too many parameters (max 100)'
-      }
-    )
+    .refine(params => params.length <= 100, {
+      message: 'Too many parameters (max 100)'
+    })
 });
 
 export type ReadQueryInput = z.infer<typeof ReadQueryInputSchema>;

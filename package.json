@@ -11,7 +11,7 @@
     "xexr-libsql": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc && chmod 755 dist/index.js",
+    "build": "pnpm lint && tsc && chmod 755 dist/index.js",
     "dev": "nodemon --exec \"tsx src/index.ts --dev\"",
     "start": "node dist/index.js",
     "test": "vitest run",

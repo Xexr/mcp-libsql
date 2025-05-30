@@ -2,23 +2,36 @@
 import { appendFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
+import { tmpdir } from 'os';
 import type { LogEntry, LogLevel } from '../types/index.js';
 
 class Logger {
   private logDir: string;
   private logFile: string;
   private currentLogLevel: keyof LogLevel;
+  private directoryEnsured: boolean = false;
 
-  constructor(logDir = 'logs', logLevel: keyof LogLevel = 'INFO') {
-    this.logDir = logDir;
-    this.logFile = join(logDir, `mcp-libsql-${new Date().toISOString().split('T')[0]}.log`);
+  constructor(logDir?: string, logLevel: keyof LogLevel = 'INFO') {
+    // Use temp directory by default for better cross-platform compatibility
+    this.logDir = logDir || join(tmpdir(), 'mcp-libsql-logs');
+    this.logFile = join(this.logDir, `mcp-libsql-${new Date().toISOString().split('T')[0]}.log`);
     this.currentLogLevel = logLevel;
-    this.ensureLogDirectory();
   }
 
   private async ensureLogDirectory(): Promise<void> {
-    if (!existsSync(this.logDir)) {
-      await mkdir(this.logDir, { recursive: true });
+    if (this.directoryEnsured) {
+      return;
+    }
+
+    try {
+      if (!existsSync(this.logDir)) {
+        await mkdir(this.logDir, { recursive: true });
+      }
+      this.directoryEnsured = true;
+    } catch (error) {
+      // If we can't create the directory, just log to console
+      console.warn(`Could not create log directory ${this.logDir}:`, error);
+      this.directoryEnsured = false;
     }
   }
 
@@ -54,11 +67,17 @@ class Logger {
 
     consoleMethod(formattedEntry.trim());
 
-    // Write to file
+    // Write to file (only if directory can be created)
     try {
-      await appendFile(this.logFile, formattedEntry);
+      await this.ensureLogDirectory();
+      if (this.directoryEnsured) {
+        await appendFile(this.logFile, formattedEntry);
+      }
     } catch (error) {
-      console.error('Failed to write to log file:', error);
+      // Silently fail file logging if we can't write - console logging still works
+      if (process.env['NODE_ENV'] !== 'production') {
+        console.warn('Failed to write to log file:', error);
+      }
     }
   }
 
@@ -105,6 +124,10 @@ class Logger {
 
   public setLogLevel(level: keyof LogLevel): void {
     this.currentLogLevel = level;
+  }
+
+  public getLogFilePath(): string {
+    return this.logFile;
   }
 }
 
