@@ -172,14 +172,17 @@ Configure the MCP server in Claude Desktop based on your operating system:
     "libsql": {
       "command": "wsl.exe",
       "args": [
+        "-e",
         "bash",
         "-c",
-        "cd /home/username/projects/mcp-libsql-server && source ~/.nvm/nvm.sh && node dist/index.js --url file:///home/username/database.db"
+        "/home/username/.nvm/versions/node/v20.13.1/bin/node /home/username/projects/mcp-libsql-server/dist/index.js --url file:///home/username/database.db"
       ]
     }
   }
 }
 ```
+
+**Important**: Use `wsl.exe -e` (not just `wsl.exe`) to ensure proper command handling and avoid issues with server command reception on Windows.
 
 **For HTTP databases (all platforms):**
 ```json
