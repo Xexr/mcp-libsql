@@ -70,14 +70,17 @@ pnpm test
 
 ### **Local Testing**
 ```bash
-# Test with file database
+# Test with file database (default: file-only logging)
 node dist/index.js --url file:///tmp/test.db
 
 # Test with HTTP database
 node dist/index.js --url http://127.0.0.1:8080
 
-# Development mode with hot reload
-pnpm dev --url file:///tmp/test.db
+# Development mode with console logging
+pnpm dev --url file:///tmp/test.db --log-mode console
+
+# Test with different logging modes
+node dist/index.js --url file:///tmp/test.db --log-mode both
 ```
 
 ### **Claude Desktop Integration**
@@ -209,6 +212,11 @@ Configure the MCP server in Claude Desktop based on your operating system:
   - libSQL/Turso: `libsql://your-database.turso.io`
 - **Node.js path**: Use `which node` to find your Node.js installation path
 - **Working directory**: Set `cwd` to ensure relative paths work correctly
+- **Logging modes**: 
+  - Default `file` mode prevents JSON parsing errors in MCP protocol
+  - Use `--log-mode console` for development debugging
+  - Use `--log-mode both` for comprehensive logging
+  - Use `--log-mode none` to disable all logging
 
 2. **Restart Claude Desktop** completely after updating the configuration
 
@@ -228,7 +236,7 @@ Configure the MCP server in Claude Desktop based on your operating system:
 
 2. **Test locally:**
    ```bash
-   node dist/index.js --url file:///tmp/test.db
+   node dist/index.js --url file:///tmp/test.db --log-mode console
    ```
 
 3. **Configure Claude Desktop** with your Node.js path and database URL (see configuration examples below)
@@ -269,7 +277,7 @@ pnpm lint:fix
 pnpm typecheck
 ```
 
-**Test Coverage**: 244 tests covering all functionality including edge cases, error scenarios, and comprehensive security validation.
+**Test Coverage**: 284 tests covering all functionality including edge cases, error scenarios, CLI arguments, and comprehensive security validation.
 
 ## ⚠️ **Common Issues**
 
@@ -307,11 +315,11 @@ Find your Node.js path: `which node`
 - Check Claude Desktop logs for connection errors
 - Test with simple file database: `file:///tmp/test.db`
 
-### **5. JSON Parsing Warnings (Harmless)**
+### **5. JSON Parsing Errors (Resolved)**
 ```
 Expected ',' or ']' after array element in JSON
 ```
-These are harmless MCP SDK warnings that don't affect functionality.
+**Resolved**: This issue was caused by stdout pollution from console logging. The `--log-mode` option now defaults to `file` mode which prevents this issue. If you see these errors, ensure you're using the default `--log-mode file` or not specifying `--log-mode` at all.
 
 ### **6. Database Connection Issues**
 ```bash

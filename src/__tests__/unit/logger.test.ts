@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { Logger } from '../../lib/logger.js';
+import { Logger, type LogMode } from '../../lib/logger.js';
 
 // Mock fs operations
 vi.mock('fs/promises', () => ({
@@ -23,7 +23,7 @@ describe('Logger', () => {
   let logger: Logger;
 
   beforeEach(() => {
-    logger = new Logger('test-logs', 'DEBUG');
+    logger = new Logger('test-logs', 'DEBUG', 'both'); // Use 'both' mode for existing tests
     vi.clearAllMocks();
   });
 
@@ -75,7 +75,7 @@ describe('Logger', () => {
   });
 
   it('should respect log level settings', () => {
-    const warnLogger = new Logger('test-logs', 'WARN');
+    const warnLogger = new Logger('test-logs', 'WARN', 'both');
     
     warnLogger.debug('This should not be logged');
     warnLogger.info('This should not be logged');
@@ -101,5 +101,57 @@ describe('Logger', () => {
     expect(consoleMocks.log).not.toHaveBeenCalled();
     expect(consoleMocks.warn).not.toHaveBeenCalled();
     expect(consoleMocks.error).toHaveBeenCalled();
+  });
+
+  describe('Log Mode Tests', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('should log to console only in console mode', () => {
+      const consoleLogger = new Logger('test-logs', 'INFO', 'console');
+      
+      consoleLogger.info('Test message');
+      
+      expect(consoleMocks.log).toHaveBeenCalled();
+    });
+
+    it('should not log to console in file mode', () => {
+      const fileLogger = new Logger('test-logs', 'INFO', 'file');
+      
+      fileLogger.info('Test message');
+      
+      expect(consoleMocks.log).not.toHaveBeenCalled();
+    });
+
+    it('should log to console in both mode', () => {
+      const bothLogger = new Logger('test-logs', 'INFO', 'both');
+      
+      bothLogger.info('Test message');
+      
+      expect(consoleMocks.log).toHaveBeenCalled();
+    });
+
+    it('should not log anything in none mode', () => {
+      const noneLogger = new Logger('test-logs', 'INFO', 'none');
+      
+      noneLogger.info('Test message');
+      noneLogger.warn('Test warning');
+      noneLogger.error('Test error');
+      noneLogger.debug('Test debug');
+      
+      expect(consoleMocks.log).not.toHaveBeenCalled();
+      expect(consoleMocks.warn).not.toHaveBeenCalled();
+      expect(consoleMocks.error).not.toHaveBeenCalled();
+      expect(consoleMocks.debug).not.toHaveBeenCalled();
+    });
+
+    it('should default to file mode when no mode specified', () => {
+      const defaultLogger = new Logger('test-logs', 'INFO');
+      
+      defaultLogger.info('Test message');
+      
+      expect(consoleMocks.log).not.toHaveBeenCalled();
+    });
   });
 });

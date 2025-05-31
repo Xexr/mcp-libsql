@@ -1,5 +1,34 @@
 # Comprehensive Troubleshooting Guide
 
+## MCP Protocol Issues
+
+### JSON Parsing Errors (Resolved)
+```
+Expected ',' or ']' after array element in JSON at position 5 (line 1 column 6)
+```
+**Problem**: Console logging polluting stdout stream used by MCP protocol  
+**Solution**: Use default `--log-mode file` or specify log mode explicitly:
+```bash
+# MCP-safe logging (default)
+node dist/index.js --url file:///tmp/test.db
+
+# For development debugging
+node dist/index.js --url file:///tmp/test.db --log-mode console
+
+# Both console and file logging
+node dist/index.js --url file:///tmp/test.db --log-mode both
+```
+
+### Logging Configuration
+```
+Logs not appearing where expected
+```
+**Solutions**:
+- Default mode is `file` - check log file location in console output
+- Use `--log-mode console` for immediate console output (development)
+- Use `--log-mode both` for comprehensive logging
+- Use `--log-mode none` to disable all logging
+
 ## Database Connection Issues
 
 ### Connection Refused
@@ -89,9 +118,9 @@ Tests failing with connection errors
 
 ### macOS
 ```bash
-# Test server locally
+# Test server locally with console logging
 cd /path/to/mcp-libsql-server
-node dist/index.js --url file:///tmp/test.db
+node dist/index.js --url file:///tmp/test.db --log-mode console
 
 # Check build output
 ls -la dist/
@@ -114,9 +143,9 @@ ls -la ~/Library/Application\ Support/Claude/claude_desktop_config.json
 
 ### Linux
 ```bash
-# Test server locally
+# Test server locally with console logging
 cd /path/to/mcp-libsql-server
-node dist/index.js --url file:///tmp/test.db
+node dist/index.js --url file:///tmp/test.db --log-mode console
 
 # Check build output
 ls -la dist/
@@ -139,9 +168,9 @@ ls -la ~/.config/Claude/claude_desktop_config.json
 
 ### Windows (WSL2)
 ```bash
-# Test server locally (in WSL2)
+# Test server locally with console logging (in WSL2)
 cd /path/to/mcp-libsql-server
-node dist/index.js --url file:///tmp/test.db
+node dist/index.js --url file:///tmp/test.db --log-mode console
 
 # Check build output
 ls -la dist/
@@ -168,7 +197,7 @@ file dist/index.js
 
 # Test with minimal database
 echo "CREATE TABLE test (id INTEGER);" | sqlite3 /tmp/minimal.db
-node dist/index.js --url file:///tmp/minimal.db
+node dist/index.js --url file:///tmp/minimal.db --log-mode console
 
 # Verify configuration syntax
 cat claude_desktop_config.json | jq .  # Requires jq for JSON validation

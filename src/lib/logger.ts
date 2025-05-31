@@ -5,17 +5,21 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import type { LogEntry, LogLevel } from '../types/index.js';
 
+export type LogMode = 'file' | 'console' | 'both' | 'none';
+
 class Logger {
   private logDir: string;
   private logFile: string;
   private currentLogLevel: keyof LogLevel;
   private directoryEnsured: boolean = false;
+  private logMode: LogMode;
 
-  constructor(logDir?: string, logLevel: keyof LogLevel = 'INFO') {
+  constructor(logDir?: string, logLevel: keyof LogLevel = 'INFO', logMode: LogMode = 'file') {
     // Use temp directory by default for better cross-platform compatibility
     this.logDir = logDir || join(tmpdir(), 'mcp-libsql-logs');
     this.logFile = join(this.logDir, `mcp-libsql-${new Date().toISOString().split('T')[0]}.log`);
     this.currentLogLevel = logLevel;
+    this.logMode = logMode;
   }
 
   private async ensureLogDirectory(): Promise<void> {
@@ -49,34 +53,38 @@ class Logger {
   }
 
   private async writeLog(entry: LogEntry): Promise<void> {
-    if (!this.shouldLog(entry.level)) {
+    if (!this.shouldLog(entry.level) || this.logMode === 'none') {
       return;
     }
 
     const formattedEntry = this.formatLogEntry(entry);
 
-    // Write to console
-    const consoleMethod =
-      entry.level === 'ERROR'
-        ? console.error
-        : entry.level === 'WARN'
-          ? console.warn
-          : entry.level === 'DEBUG'
-            ? console.debug
-            : console.log;
+    // Write to console based on log mode
+    if (this.logMode === 'console' || this.logMode === 'both') {
+      const consoleMethod =
+        entry.level === 'ERROR'
+          ? console.error
+          : entry.level === 'WARN'
+            ? console.warn
+            : entry.level === 'DEBUG'
+              ? console.debug
+              : console.log;
 
-    consoleMethod(formattedEntry.trim());
+      consoleMethod(formattedEntry.trim());
+    }
 
-    // Write to file (only if directory can be created)
-    try {
-      await this.ensureLogDirectory();
-      if (this.directoryEnsured) {
-        await appendFile(this.logFile, formattedEntry);
-      }
-    } catch (error) {
-      // Silently fail file logging if we can't write - console logging still works
-      if (process.env['NODE_ENV'] !== 'production') {
-        console.warn('Failed to write to log file:', error);
+    // Write to file based on log mode
+    if (this.logMode === 'file' || this.logMode === 'both') {
+      try {
+        await this.ensureLogDirectory();
+        if (this.directoryEnsured) {
+          await appendFile(this.logFile, formattedEntry);
+        }
+      } catch (error) {
+        // Silently fail file logging if we can't write - console logging still works
+        if (process.env['NODE_ENV'] !== 'production') {
+          console.warn('Failed to write to log file:', error);
+        }
       }
     }
   }

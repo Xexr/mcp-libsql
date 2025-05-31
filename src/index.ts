@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 import { parseArgs } from 'node:util';
-import { Logger } from './lib/logger.js';
+import { Logger, type LogMode } from './lib/logger.js';
 import { DatabaseConfig } from './types/index.js';
 import { ServerManager } from './lib/server-manager.js';
 
-const logger = new Logger();
+let logger = new Logger();
 
 interface CLIOptions {
   url: string;
@@ -16,6 +16,7 @@ interface CLIOptions {
   help: boolean | undefined;
   version: boolean | undefined;
   dev: boolean | undefined;
+  logMode: LogMode | undefined;
 }
 
 function showHelp(): void {
@@ -31,6 +32,7 @@ Options:
   --max-connections <number>     Maximum connections in pool (default: 10)
   --connection-timeout <number>  Connection timeout in ms (default: 30000)
   --query-timeout <number>       Query timeout in ms (default: 30000)
+  --log-mode <mode>              Logging mode: file, console, both, none (default: file)
   --dev                          Enable development mode with enhanced logging
   --help                         Show this help message
   --version                      Show version information
@@ -39,6 +41,7 @@ Examples:
   mcp-libsql-server --url "file:local.db"
   mcp-libsql-server --url "libsql://your-db.turso.io" --max-connections 20
   mcp-libsql-server --url "http://localhost:8080" --min-connections 2 --dev
+  mcp-libsql-server --url "file:local.db" --log-mode console
 
 Development:
   Use --dev flag for enhanced logging and development features
@@ -53,18 +56,20 @@ async function showVersion(): Promise<void> {
     const { join } = await import('path');
     const { fileURLToPath } = await import('url');
     const { dirname } = await import('path');
-    
+
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
     const packagePath = join(__dirname, '..', 'package.json');
-    
+
     const packageContent = await readFile(packagePath, 'utf-8');
     const packageJson = JSON.parse(packageContent);
-    
+
     // eslint-disable-next-line no-console
     console.log(`mcp-libsql-server v${packageJson.version}`);
   } catch (error) {
     // Fallback if reading package.json fails
+    // eslint-disable-next-line no-console
+    console.error(error);
     // eslint-disable-next-line no-console
     console.log('mcp-libsql-server v1.0.0');
   }
@@ -80,6 +85,7 @@ function parseCliArgs(): CLIOptions {
         'max-connections': { type: 'string' },
         'connection-timeout': { type: 'string' },
         'query-timeout': { type: 'string' },
+        'log-mode': { type: 'string' },
         dev: { type: 'boolean', short: 'd' },
         help: { type: 'boolean', short: 'h' },
         version: { type: 'boolean', short: 'v' }
@@ -99,6 +105,7 @@ function parseCliArgs(): CLIOptions {
         ? parseInt(values['connection-timeout'], 10)
         : undefined,
       queryTimeout: values['query-timeout'] ? parseInt(values['query-timeout'], 10) : undefined,
+      logMode: values['log-mode'] as LogMode | undefined,
       dev: values.dev,
       help: values.help,
       version: values.version
@@ -171,6 +178,15 @@ async function validateOptions(options: CLIOptions): Promise<DatabaseConfig> {
     process.exit(1);
   }
 
+  // Validate log-mode
+  if (
+    options.logMode !== undefined &&
+    !['file', 'console', 'both', 'none'].includes(options.logMode)
+  ) {
+    logger.error('log-mode must be one of: file, console, both, none');
+    process.exit(1);
+  }
+
   const config: DatabaseConfig = {
     url: options.url,
     ...(options.minConnections !== undefined && { minConnections: options.minConnections }),
@@ -188,14 +204,23 @@ async function main(): Promise<void> {
   let serverManager: ServerManager | null = null;
 
   try {
+    const options = parseCliArgs();
+    const config = await validateOptions(options);
+
+    // Create logger with specified log mode (default to 'file')
+    const logMode = options.logMode || 'file';
+    logger = new Logger(undefined, 'INFO', logMode);
+
     logger.info('Starting MCP libSQL Server');
     logger.info(`Node.js version: ${process.version}`);
     logger.info(`Platform: ${process.platform} ${process.arch}`);
-    // Log where we're writing logs for easy access
-    console.error(`Log file location: ${logger.getLogFilePath()}`);
+    logger.info(`Log mode: ${logMode}`);
 
-    const options = parseCliArgs();
-    const config = await validateOptions(options);
+    // Log where we're writing logs for easy access (only if file logging is enabled)
+    if (logMode === 'file' || logMode === 'both') {
+      // eslint-disable-next-line no-console
+      console.error(`Log file location: ${logger.getLogFilePath()}`);
+    }
 
     const isDevelopment = options.dev || process.env['NODE_ENV'] === 'development';
 
