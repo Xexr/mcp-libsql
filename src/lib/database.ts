@@ -9,7 +9,8 @@ class LibSQLConnection implements DatabaseConnection {
 
   constructor(private config: DatabaseConfig) {
     this.client = createClient({
-      url: config.url
+      url: config.url,
+      ...(config.authToken && { authToken: config.authToken })
     });
   }
 
@@ -18,14 +19,35 @@ class LibSQLConnection implements DatabaseConnection {
       // Test connection with a simple query
       await this.client.execute('SELECT 1');
       this.isConnected = true;
-      logger.info('Database connection established', { url: this.config.url });
+      logger.info('Database connection established', {
+        url: this.config.url,
+        authTokenProvided: !!this.config.authToken
+      });
     } catch (error) {
       this.isConnected = false;
-      logger.error(
-        'Failed to establish database connection',
-        { url: this.config.url },
-        error as Error
-      );
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // Provide more helpful error messages for auth-related issues
+      if (this.config.authToken && errorMessage.toLowerCase().includes('auth')) {
+        logger.error(
+          'Database connection failed - authentication error',
+          {
+            url: this.config.url,
+            authTokenProvided: !!this.config.authToken,
+            hint: 'Please verify your auth token is correct and has the necessary permissions'
+          },
+          error as Error
+        );
+      } else {
+        logger.error(
+          'Failed to establish database connection',
+          {
+            url: this.config.url,
+            authTokenProvided: !!this.config.authToken
+          },
+          error as Error
+        );
+      }
       throw error;
     }
   }
@@ -131,7 +153,7 @@ class LibSQLConnection implements DatabaseConnection {
 class LibSQLConnectionPool implements ConnectionPool {
   private connections: LibSQLConnection[] = [];
   private availableConnections: LibSQLConnection[] = [];
-  private config: Required<DatabaseConfig>;
+  private config: Required<Omit<DatabaseConfig, 'authToken'>> & Pick<DatabaseConfig, 'authToken'>;
   private isShuttingDown: boolean = false;
 
   constructor(config: DatabaseConfig) {

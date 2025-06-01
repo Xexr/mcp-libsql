@@ -1,5 +1,6 @@
 export interface DatabaseConfig {
   url: string;
+  authToken?: string;
   minConnections?: number;
   maxConnections?: number;
   connectionTimeout?: number;

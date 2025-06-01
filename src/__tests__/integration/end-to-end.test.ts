@@ -622,4 +622,55 @@ describe('End-to-End Integration Tests', () => {
       }
     });
   });
+
+  describe('Authentication Integration', () => {
+    it('should accept database config with auth token', async () => {
+      // Test that auth token config is accepted without breaking pool initialization
+      const authConfig: DatabaseConfig = {
+        url: 'file:test-auth-integration.db',
+        authToken: 'test-token-for-integration',
+        minConnections: 1,
+        maxConnections: 2
+      };
+
+      const authPool = new LibSQLConnectionPool(authConfig);
+      
+      // Test that pool can be created and initialized with auth token
+      expect(authPool).toBeInstanceOf(LibSQLConnectionPool);
+      
+      await authPool.initialize();
+      
+      // Verify pool status shows correct configuration
+      const status = authPool.getStatus();
+      expect(status.totalConnections).toBe(1);
+      expect(status.minConnections).toBe(1);
+      expect(status.maxConnections).toBe(2);
+      
+      await authPool.close();
+    });
+
+    it('should work without auth token', async () => {
+      // Test that missing auth token doesn't break pool functionality
+      const noAuthConfig: DatabaseConfig = {
+        url: 'file:test-no-auth-integration.db',
+        minConnections: 1,
+        maxConnections: 2
+      };
+
+      const noAuthPool = new LibSQLConnectionPool(noAuthConfig);
+      
+      // Test that pool can be created and initialized without auth token
+      expect(noAuthPool).toBeInstanceOf(LibSQLConnectionPool);
+      
+      await noAuthPool.initialize();
+      
+      // Verify pool status shows correct configuration
+      const status = noAuthPool.getStatus();
+      expect(status.totalConnections).toBe(1);
+      expect(status.minConnections).toBe(1);
+      expect(status.maxConnections).toBe(2);
+      
+      await noAuthPool.close();
+    });
+  });
 });

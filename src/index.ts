@@ -9,6 +9,7 @@ let logger = new Logger();
 
 interface CLIOptions {
   url: string;
+  authToken: string | undefined;
   minConnections: number | undefined;
   maxConnections: number | undefined;
   connectionTimeout: number | undefined;
@@ -28,6 +29,8 @@ Usage: mcp-libsql-server --url <DATABASE_URL> [options]
 
 Options:
   --url <URL>                    libSQL database URL (required)
+  --auth-token <token>           Authentication token for Turso databases (optional)
+                                 Can also be set via LIBSQL_AUTH_TOKEN environment variable
   --min-connections <number>     Minimum connections in pool (default: 1)
   --max-connections <number>     Maximum connections in pool (default: 10)
   --connection-timeout <number>  Connection timeout in ms (default: 30000)
@@ -39,13 +42,15 @@ Options:
 
 Examples:
   mcp-libsql-server --url "file:local.db"
-  mcp-libsql-server --url "libsql://your-db.turso.io" --max-connections 20
+  mcp-libsql-server --url "libsql://your-db.turso.io" --auth-token "your-token" --max-connections 20
+  LIBSQL_AUTH_TOKEN="your-token" mcp-libsql-server --url "libsql://your-db.turso.io"
   mcp-libsql-server --url "http://localhost:8080" --min-connections 2 --dev
   mcp-libsql-server --url "file:local.db" --log-mode console
 
 Development:
   Use --dev flag for enhanced logging and development features
   Use 'pnpm dev --url "file:test.db"' for hot reloading during development
+  For Turso development, set LIBSQL_AUTH_TOKEN env var to avoid exposing tokens in command history
 `);
 }
 
@@ -81,6 +86,7 @@ function parseCliArgs(): CLIOptions {
       args: process.argv.slice(2),
       options: {
         url: { type: 'string' },
+        'auth-token': { type: 'string' },
         'min-connections': { type: 'string' },
         'max-connections': { type: 'string' },
         'connection-timeout': { type: 'string' },
@@ -95,6 +101,7 @@ function parseCliArgs(): CLIOptions {
 
     return {
       url: values.url || '',
+      authToken: values['auth-token'] || process.env['LIBSQL_AUTH_TOKEN'],
       minConnections: values['min-connections']
         ? parseInt(values['min-connections'], 10)
         : undefined,
@@ -187,8 +194,37 @@ async function validateOptions(options: CLIOptions): Promise<DatabaseConfig> {
     process.exit(1);
   }
 
+  // Validate auth-token
+  if (options.authToken !== undefined) {
+    if (typeof options.authToken !== 'string' || options.authToken.trim().length === 0) {
+      logger.error('auth-token must be a non-empty string');
+      process.exit(1);
+    }
+
+    // Validate auth token format for Turso tokens (basic validation)
+    // Turso tokens are typically JWT-like base64 encoded strings
+    if (options.authToken.includes(' ') || options.authToken.includes('\n')) {
+      logger.error('auth-token contains invalid characters (spaces or newlines)');
+      process.exit(1);
+    }
+
+    // Warn if auth token looks suspicious (too short)
+    if (options.authToken.length < 10) {
+      logger.warn('auth-token appears to be very short, please ensure it is correct');
+    }
+
+    // Validate that auth token is used with appropriate URLs
+    if (!options.url.startsWith('libsql://') && !options.url.startsWith('https://')) {
+      logger.warn(
+        'auth-token provided but URL does not appear to be a remote database (libsql:// or https://)'
+      );
+      logger.warn('Auth tokens are typically used with Turso or other remote libSQL databases');
+    }
+  }
+
   const config: DatabaseConfig = {
     url: options.url,
+    ...(options.authToken !== undefined && { authToken: options.authToken }),
     ...(options.minConnections !== undefined && { minConnections: options.minConnections }),
     ...(options.maxConnections !== undefined && { maxConnections: options.maxConnections }),
     ...(options.connectionTimeout !== undefined && {
@@ -224,8 +260,26 @@ async function main(): Promise<void> {
 
     const isDevelopment = options.dev || process.env['NODE_ENV'] === 'development';
 
+    // Determine auth token source for logging
+    let authTokenSource = 'none';
+    if (config.authToken) {
+      const cliToken = parseArgs({
+        args: process.argv.slice(2),
+        options: { 'auth-token': { type: 'string' } },
+        strict: false
+      }).values['auth-token'];
+
+      if (cliToken) {
+        authTokenSource = 'CLI parameter';
+      } else if (process.env['LIBSQL_AUTH_TOKEN']) {
+        authTokenSource = 'environment variable';
+      }
+    }
+
     logger.info('Configuration validated', {
       url: config.url,
+      authTokenProvided: !!config.authToken,
+      authTokenSource,
       minConnections: config.minConnections,
       maxConnections: config.maxConnections,
       connectionTimeout: config.connectionTimeout,

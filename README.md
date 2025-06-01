@@ -76,6 +76,12 @@ node dist/index.js --url file:///tmp/test.db
 # Test with HTTP database
 node dist/index.js --url http://127.0.0.1:8080
 
+# Test with Turso database (environment variable)
+LIBSQL_AUTH_TOKEN="your-token" node dist/index.js --url "libsql://your-db.turso.io"
+
+# Test with Turso database (CLI parameter)
+node dist/index.js --url "libsql://your-db.turso.io" --auth-token "your-token"
+
 # Development mode with console logging
 pnpm dev --url file:///tmp/test.db --log-mode console
 
@@ -203,6 +209,128 @@ Configure the MCP server in Claude Desktop based on your operating system:
 }
 ```
 
+### **Turso Authentication**
+
+For Turso databases, you'll need an authentication token. There are two secure ways to provide it:
+
+#### **Method 1: Environment Variable (Recommended)**
+
+**Configure Claude Desktop with environment variable** (macOS example):
+```json
+{
+  "mcpServers": {
+    "libsql": {
+      "command": "node",
+      "args": [
+        "/path/to/mcp-libsql-server/dist/index.js",
+        "--url",
+        "libsql://your-database.turso.io"
+      ],
+      "env": {
+        "LIBSQL_AUTH_TOKEN": "your-turso-auth-token-here"
+      }
+    }
+  }
+}
+```
+
+**For local testing, you can also export in your shell:**
+```bash
+export LIBSQL_AUTH_TOKEN="your-turso-auth-token-here"
+node dist/index.js --url "libsql://your-database.turso.io"
+```
+
+#### **Method 2: CLI Parameter**
+
+```json
+{
+  "mcpServers": {
+    "libsql": {
+      "command": "node",
+      "args": [
+        "/path/to/mcp-libsql-server/dist/index.js",
+        "--url",
+        "libsql://your-database.turso.io",
+        "--auth-token",
+        "your-turso-auth-token-here"
+      ]
+    }
+  }
+}
+```
+
+#### **Getting Your Turso Auth Token**
+
+1. **Install Turso CLI:**
+   ```bash
+   curl -sSfL https://get.tur.so/install.sh | bash
+   ```
+
+2. **Login to Turso:**
+   ```bash
+   turso auth login
+   ```
+
+3. **Create an auth token:**
+   ```bash
+   turso auth token create --name "mcp-libsql-server"
+   ```
+
+4. **Get your database URL:**
+   ```bash
+   turso db show your-database-name --url
+   ```
+
+#### **Security Best Practices**
+
+- **Environment variables are safer** than CLI parameters (tokens won't appear in process lists)
+- **MCP config files may contain tokens** - ensure they're not committed to version control
+- **Consider using external secret management** for production environments
+- **Use scoped tokens** with minimal required permissions
+- **Rotate tokens regularly** for enhanced security
+- **Monitor token usage** through Turso dashboard
+
+#### **Example: Complete Turso Setup**
+
+1. **Create and configure database:**
+   ```bash
+   # Create database
+   turso db create my-app-db
+   
+   # Get database URL
+   turso db show my-app-db --url
+   # Output: libsql://my-app-db-username.turso.io
+   
+   # Create auth token
+   turso auth token create --name "mcp-server-token"
+   # Output: your-long-auth-token-string
+   ```
+
+2. **Configure Claude Desktop:**
+   ```json
+   {
+     "mcpServers": {
+       "libsql": {
+         "command": "/usr/local/bin/node",
+         "args": [
+           "/path/to/mcp-libsql-server/dist/index.js",
+           "--url",
+           "libsql://my-app-db-username.turso.io"
+         ],
+         "env": {
+           "LIBSQL_AUTH_TOKEN": "your-long-auth-token-string"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Test the connection:**
+   ```bash
+   # Test locally first
+   LIBSQL_AUTH_TOKEN="your-token" node dist/index.js --url "libsql://my-app-db-username.turso.io" --log-mode console
+   ```
+
 #### **Configuration Notes**
 
 - **File paths**: Use absolute paths to avoid path resolution issues
@@ -212,6 +340,7 @@ Configure the MCP server in Claude Desktop based on your operating system:
   - libSQL/Turso: `libsql://your-database.turso.io`
 - **Node.js path**: Use `which node` to find your Node.js installation path
 - **Working directory**: Set `cwd` to ensure relative paths work correctly
+- **Authentication**: For Turso databases, use environment variables for secure token handling
 - **Logging modes**: 
   - Default `file` mode prevents JSON parsing errors in MCP protocol
   - Use `--log-mode console` for development debugging

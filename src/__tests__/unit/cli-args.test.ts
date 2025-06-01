@@ -13,6 +13,7 @@ import type { LogMode } from '../../lib/logger.js';
 
 interface CLIOptions {
   url: string;
+  authToken: string | undefined;
   minConnections: number | undefined;
   maxConnections: number | undefined;
   connectionTimeout: number | undefined;
@@ -29,6 +30,7 @@ function parseCliArgs(): CLIOptions {
     args: process.argv.slice(2),
     options: {
       url: { type: 'string' },
+      'auth-token': { type: 'string' },
       'min-connections': { type: 'string' },
       'max-connections': { type: 'string' },
       'connection-timeout': { type: 'string' },
@@ -43,6 +45,7 @@ function parseCliArgs(): CLIOptions {
 
   return {
     url: values.url || '',
+    authToken: values['auth-token'] || process.env['LIBSQL_AUTH_TOKEN'],
     minConnections: values['min-connections']
       ? parseInt(values['min-connections'], 10)
       : undefined,
@@ -620,5 +623,249 @@ describe('CLI Examples from Help Text', () => {
     
     expect(result.url).toBe('file:local.db');
     expect(result.logMode).toBe('console');
+  });
+
+  it('should parse turso auth token example correctly', () => {
+    // mcp-libsql-server --url "libsql://your-db.turso.io" --auth-token "your-token" --max-connections 20
+    mockParseArgs.mockReturnValue({
+      values: {
+        url: 'libsql://your-db.turso.io',
+        'auth-token': 'your-token',
+        'max-connections': '20'
+      },
+      positionals: []
+    });
+
+    const result = parseCliArgs();
+    
+    expect(result.url).toBe('libsql://your-db.turso.io');
+    expect(result.authToken).toBe('your-token');
+    expect(result.maxConnections).toBe(20);
+  });
+});
+
+describe('Authentication Token Parsing', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Clear environment variables before each test
+    delete process.env['LIBSQL_AUTH_TOKEN'];
+  });
+
+  describe('CLI auth-token parameter', () => {
+    it('should parse auth-token correctly', () => {
+      mockParseArgs.mockReturnValue({
+        values: {
+          url: 'libsql://my-db.turso.io',
+          'auth-token': 'test-cli-token-123'
+        },
+        positionals: []
+      });
+
+      const result = parseCliArgs();
+      
+      expect(result.authToken).toBe('test-cli-token-123');
+    });
+
+    it('should handle missing auth-token', () => {
+      mockParseArgs.mockReturnValue({
+        values: {
+          url: 'file:test.db'
+        },
+        positionals: []
+      });
+
+      const result = parseCliArgs();
+      
+      expect(result.authToken).toBeUndefined();
+    });
+
+    it('should handle empty auth-token', () => {
+      mockParseArgs.mockReturnValue({
+        values: {
+          url: 'libsql://my-db.turso.io',
+          'auth-token': ''
+        },
+        positionals: []
+      });
+
+      const result = parseCliArgs();
+      
+      // Empty string is falsy, so environment variable fallback applies
+      // Since no env var is set in test, should be undefined
+      expect(result.authToken).toBeUndefined();
+    });
+
+    it('should handle long auth tokens', () => {
+      const longToken = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MDEzNDU2NzgsImlkIjoiYWJjZGVmZ2gtaWprbC1tbm9wLXFyc3QtdXZ3eHl6MTIzNDU2In0.example-long-jwt-token-for-turso-authentication';
+      
+      mockParseArgs.mockReturnValue({
+        values: {
+          url: 'libsql://my-db.turso.io',
+          'auth-token': longToken
+        },
+        positionals: []
+      });
+
+      const result = parseCliArgs();
+      
+      expect(result.authToken).toBe(longToken);
+    });
+  });
+
+  describe('Environment variable auth token', () => {
+    it('should use LIBSQL_AUTH_TOKEN environment variable when CLI token not provided', () => {
+      process.env['LIBSQL_AUTH_TOKEN'] = 'test-env-token-456';
+      
+      mockParseArgs.mockReturnValue({
+        values: {
+          url: 'libsql://my-db.turso.io'
+        },
+        positionals: []
+      });
+
+      const result = parseCliArgs();
+      
+      expect(result.authToken).toBe('test-env-token-456');
+    });
+
+    it('should prioritize CLI auth-token over environment variable', () => {
+      process.env['LIBSQL_AUTH_TOKEN'] = 'test-env-token-456';
+      
+      mockParseArgs.mockReturnValue({
+        values: {
+          url: 'libsql://my-db.turso.io',
+          'auth-token': 'test-cli-token-123'
+        },
+        positionals: []
+      });
+
+      const result = parseCliArgs();
+      
+      expect(result.authToken).toBe('test-cli-token-123');
+    });
+
+    it('should handle empty environment variable', () => {
+      process.env['LIBSQL_AUTH_TOKEN'] = '';
+      
+      mockParseArgs.mockReturnValue({
+        values: {
+          url: 'libsql://my-db.turso.io'
+        },
+        positionals: []
+      });
+
+      const result = parseCliArgs();
+      
+      expect(result.authToken).toBe('');
+    });
+
+    it('should return undefined when neither CLI nor env token provided', () => {
+      mockParseArgs.mockReturnValue({
+        values: {
+          url: 'file:test.db'
+        },
+        positionals: []
+      });
+
+      const result = parseCliArgs();
+      
+      expect(result.authToken).toBeUndefined();
+    });
+  });
+
+  describe('Authentication with other options', () => {
+    it('should handle auth token with all other options', () => {
+      process.env['LIBSQL_AUTH_TOKEN'] = 'env-token';
+      
+      mockParseArgs.mockReturnValue({
+        values: {
+          url: 'libsql://my-db.turso.io',
+          'auth-token': 'cli-token',
+          'min-connections': '2',
+          'max-connections': '15',
+          'connection-timeout': '5000',
+          'query-timeout': '10000',
+          'log-mode': 'both',
+          dev: true
+        },
+        positionals: []
+      });
+
+      const result = parseCliArgs();
+      
+      expect(result.url).toBe('libsql://my-db.turso.io');
+      expect(result.authToken).toBe('cli-token'); // CLI takes precedence
+      expect(result.minConnections).toBe(2);
+      expect(result.maxConnections).toBe(15);
+      expect(result.connectionTimeout).toBe(5000);
+      expect(result.queryTimeout).toBe(10000);
+      expect(result.logMode).toBe('both');
+      expect(result.dev).toBe(true);
+    });
+
+    it('should handle file database with auth token (unusual but valid)', () => {
+      mockParseArgs.mockReturnValue({
+        values: {
+          url: 'file:local.db',
+          'auth-token': 'unnecessary-token'
+        },
+        positionals: []
+      });
+
+      const result = parseCliArgs();
+      
+      expect(result.url).toBe('file:local.db');
+      expect(result.authToken).toBe('unnecessary-token');
+    });
+  });
+
+  describe('Real-world token examples', () => {
+    it('should handle JWT-like tokens', () => {
+      const jwtToken = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MDEzNDU2NzgsImlkIjoiYWJjZGVmZ2gtaWprbC1tbm9wLXFyc3QtdXZ3eHl6MTIzNDU2In0.signature';
+      
+      mockParseArgs.mockReturnValue({
+        values: {
+          url: 'libsql://my-db.turso.io',
+          'auth-token': jwtToken
+        },
+        positionals: []
+      });
+
+      const result = parseCliArgs();
+      
+      expect(result.authToken).toBe(jwtToken);
+    });
+
+    it('should handle base64-like tokens', () => {
+      const base64Token = 'dGVzdC10b2tlbi1mb3ItdHVyc28tYXV0aGVudGljYXRpb24tMTIzNDU2Nzg5MA==';
+      
+      mockParseArgs.mockReturnValue({
+        values: {
+          url: 'libsql://my-db.turso.io',
+          'auth-token': base64Token
+        },
+        positionals: []
+      });
+
+      const result = parseCliArgs();
+      
+      expect(result.authToken).toBe(base64Token);
+    });
+
+    it('should handle alphanumeric tokens', () => {
+      const alphanumericToken = 'abc123def456ghi789jkl012mno345pqr678stu901vwx234yz';
+      
+      mockParseArgs.mockReturnValue({
+        values: {
+          url: 'libsql://my-db.turso.io',
+          'auth-token': alphanumericToken
+        },
+        positionals: []
+      });
+
+      const result = parseCliArgs();
+      
+      expect(result.authToken).toBe(alphanumericToken);
+    });
   });
 });
