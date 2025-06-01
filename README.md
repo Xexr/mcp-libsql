@@ -56,7 +56,7 @@ Runs on Node, written in TypeScript
 npm install -g @xexr/mcp-libsql
 
 # Or clone repository
-git clone <repository-url>
+git clone https://github.com/Xexr/mcp-libsql.git
 cd mcp-libsql
 
 # Install dependencies

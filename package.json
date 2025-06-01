@@ -10,6 +10,11 @@
   "bin": {
     "mcp-libsql": "dist/index.js"
   },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "pnpm lint && tsc && chmod 755 dist/index.js",
     "dev": "nodemon --exec \"tsx src/index.ts --dev\"",
@@ -35,11 +40,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/xexr/mcp-libsql.git"
+    "url": "https://github.com/Xexr/mcp-libsql.git"
   },
-  "homepage": "https://github.com/xexr/mcp-libsql",
+  "homepage": "https://github.com/Xexr/mcp-libsql",
   "bugs": {
-    "url": "https://github.com/xexr/mcp-libsql/issues"
+    "url": "https://github.com/Xexr/mcp-libsql/issues"
   },
   "publishConfig": {
     "access": "public"

@@ -1,0 +1,52 @@
+# Source files (compiled dist/ is included)
+src/
+
+# Test files
+**/*.test.ts
+**/*.spec.ts
+coverage/
+vitest.config.ts
+
+# Development files
+plans/
+docs/
+logs/
+*.log
+
+# AI/Claude specific files
+CLAUDE.md
+.claude/
+
+# Build tools
+nodemon.json
+eslint.config.js
+.prettierrc
+.prettierignore
+tsconfig.json
+
+# Git and CI
+.git/
+.github/
+.gitignore
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
