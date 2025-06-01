@@ -1,5 +1,5 @@
 {
-  "name": "xexr-libsql",
+  "name": "@xexr/mcp-libsql",
   "version": "1.0.0",
   "description": "MCP server for libSQL database operations",
   "type": "module",
@@ -8,7 +8,7 @@
   },
   "main": "dist/index.js",
   "bin": {
-    "xexr-libsql": "dist/index.js"
+    "mcp-libsql": "dist/index.js"
   },
   "scripts": {
     "build": "pnpm lint && tsc && chmod 755 dist/index.js",
@@ -31,8 +31,19 @@
     "ai",
     "model-context-protocol"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "xexr",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xexr/mcp-libsql.git"
+  },
+  "homepage": "https://github.com/xexr/mcp-libsql",
+  "bugs": {
+    "url": "https://github.com/xexr/mcp-libsql/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@libsql/client": "^0.15.7",
     "@modelcontextprotocol/sdk": "^1.12.0",

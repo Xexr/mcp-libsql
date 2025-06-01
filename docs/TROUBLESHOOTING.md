@@ -119,7 +119,10 @@ Tests failing with connection errors
 ### macOS
 ```bash
 # Test server locally with console logging
-cd /path/to/mcp-libsql-server
+mcp-libsql --url file:///tmp/test.db --log-mode console
+
+# Or for local installation
+cd /path/to/mcp-libsql
 node dist/index.js --url file:///tmp/test.db --log-mode console
 
 # Check build output
@@ -144,7 +147,10 @@ ls -la ~/Library/Application\ Support/Claude/claude_desktop_config.json
 ### Linux
 ```bash
 # Test server locally with console logging
-cd /path/to/mcp-libsql-server
+mcp-libsql --url file:///tmp/test.db --log-mode console
+
+# Or for local installation
+cd /path/to/mcp-libsql
 node dist/index.js --url file:///tmp/test.db --log-mode console
 
 # Check build output
@@ -169,7 +175,10 @@ ls -la ~/.config/Claude/claude_desktop_config.json
 ### Windows (WSL2)
 ```bash
 # Test server locally with console logging (in WSL2)
-cd /path/to/mcp-libsql-server
+mcp-libsql --url file:///tmp/test.db --log-mode console
+
+# Or for local installation
+cd /path/to/mcp-libsql
 node dist/index.js --url file:///tmp/test.db --log-mode console
 
 # Check build output
@@ -197,7 +206,7 @@ file dist/index.js
 
 # Test with minimal database
 echo "CREATE TABLE test (id INTEGER);" | sqlite3 /tmp/minimal.db
-node dist/index.js --url file:///tmp/minimal.db --log-mode console
+mcp-libsql --url file:///tmp/minimal.db --log-mode console
 
 # Verify configuration syntax
 cat claude_desktop_config.json | jq .  # Requires jq for JSON validation

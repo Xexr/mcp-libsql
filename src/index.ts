@@ -23,9 +23,9 @@ interface CLIOptions {
 function showHelp(): void {
   // eslint-disable-next-line no-console
   console.log(`
-MCP libSQL Server
+MCP libSQL Server by xexr
 
-Usage: mcp-libsql-server --url <DATABASE_URL> [options]
+Usage: mcp-libsql --url <DATABASE_URL> [options]
 
 Options:
   --url <URL>                    libSQL database URL (required)
@@ -41,11 +41,11 @@ Options:
   --version                      Show version information
 
 Examples:
-  mcp-libsql-server --url "file:local.db"
-  mcp-libsql-server --url "libsql://your-db.turso.io" --auth-token "your-token" --max-connections 20
-  LIBSQL_AUTH_TOKEN="your-token" mcp-libsql-server --url "libsql://your-db.turso.io"
-  mcp-libsql-server --url "http://localhost:8080" --min-connections 2 --dev
-  mcp-libsql-server --url "file:local.db" --log-mode console
+  mcp-libsql --url "file:local.db"
+  mcp-libsql --url "libsql://your-db.turso.io" --auth-token "your-token" --max-connections 20
+  LIBSQL_AUTH_TOKEN="your-token" mcp-libsql --url "libsql://your-db.turso.io"
+  mcp-libsql --url "http://localhost:8080" --min-connections 2 --dev
+  mcp-libsql --url "file:local.db" --log-mode console
 
 Development:
   Use --dev flag for enhanced logging and development features
@@ -70,13 +70,13 @@ async function showVersion(): Promise<void> {
     const packageJson = JSON.parse(packageContent);
 
     // eslint-disable-next-line no-console
-    console.log(`mcp-libsql-server v${packageJson.version}`);
+    console.log(`@xexr/mcp-libsql v${packageJson.version}`);
   } catch (error) {
     // Fallback if reading package.json fails
     // eslint-disable-next-line no-console
     console.error(error);
     // eslint-disable-next-line no-console
-    console.log('mcp-libsql-server v1.0.0');
+    console.log('@xexr/mcp-libsql v1.0.0');
   }
 }
 
