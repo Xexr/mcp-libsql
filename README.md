@@ -8,7 +8,7 @@ Runs on Node, written in TypeScript
 
 1. **Install:**
    ```bash
-   npm install -g @xexr/mcp-libsql
+   pnpm install -g @xexr/mcp-libsql
    ```
 
 2. **Test locally:**
@@ -453,7 +453,7 @@ SyntaxError: Unexpected token '??='
 **Solution**: Use global installation and nvm node selection method shown above.
 
 ### **3. Server Won't Start**
-- For global installation: `npm install -g @xexr/mcp-libsql`
+- For global installation: `pnpm install -g @xexr/mcp-libsql`
 - For local installation: Ensure `pnpm build` was run and `dist/index.js` exists
 - Test locally: `mcp-libsql --url file:///tmp/test.db`
 - Restart Claude Desktop after config changes
