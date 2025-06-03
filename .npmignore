@@ -11,6 +11,7 @@ vitest.config.ts
 plans/
 docs/
 logs/
+dist/logs/
 *.log
 
 # AI/Claude specific files
