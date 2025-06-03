@@ -364,7 +364,12 @@ async function main(): Promise<void> {
 }
 
 // Start the server
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Check if this file is being run directly (works with both direct execution and npx)
+const isMainModule = import.meta.url === `file://${process.argv[1]}` || 
+                     process.argv[1]?.endsWith('/dist/index.js') ||
+                     process.argv[1]?.endsWith('\\dist\\index.js');
+
+if (isMainModule) {
   main().catch(error => {
     logger.error('Unhandled error in main', {
       error: error instanceof Error ? error.message : String(error)
