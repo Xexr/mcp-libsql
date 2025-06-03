@@ -4,6 +4,20 @@ A Model Context Protocol (MCP) server for libSQL database operations, providing 
 
 Runs on Node, written in TypeScript
 
+## 🔧 **Quick Start**
+
+1. **Install:**
+   ```bash
+   npm install -g @xexr/mcp-libsql
+   ```
+
+2. **Test locally:**
+   ```bash
+   mcp-libsql --url file:///tmp/test.db --log-mode console
+   ```
+
+3. **Configure Claude Desktop** with your Node.js path and database URL (see configuration examples below)
+
 ## 🚀 **Status**
 
 ✅ **Complete database management capabilities** - All 6 core tools implemented and tested  
@@ -52,44 +66,44 @@ Runs on Node, written in TypeScript
 ## 🔧 **Installation**
 
 ```bash
-# Install from npm
-npm install -g @xexr/mcp-libsql
+# Use your package manager of choice, e.g. npm, pnpm, bun etc
 
-# Or clone repository
+# Install globally
+pnpm install -g @xexr/mcp-libsql
+mcp-libsql -v # check version
+
+# ...or build from the repository
 git clone https://github.com/Xexr/mcp-libsql.git
 cd mcp-libsql
-
-# Install dependencies
-pnpm install
-
-# Build the project
-pnpm build
-
-# Run tests to verify installation
-pnpm test
+pnpm install # Install dependencies
+pnpm build # Build the project
+node dist/index.js -v  # check version
 ```
 
 ## 🚀 **Usage**
 
 ### **Local Testing**
+
+Global installation assumed below, replace "mcp-libsql" with "node dist/index.js" if using local build
+
 ```bash
 # Test with file database (default: file-only logging)
-node dist/index.js --url file:///tmp/test.db
+mcp-libsql --url file:///tmp/test.db
 
 # Test with HTTP database
-node dist/index.js --url http://127.0.0.1:8080
+mcp-libsql --url http://127.0.0.1:8080
 
-# Test with Turso database (environment variable)
-LIBSQL_AUTH_TOKEN="your-token" node dist/index.js --url "libsql://your-db.turso.io"
+# Test with Turso database (environment variable, alternatively export the env var)
+LIBSQL_AUTH_TOKEN="your-token" mcp-libsql --url "libsql://your-db.turso.io"
 
 # Test with Turso database (CLI parameter)
-node dist/index.js --url "libsql://your-db.turso.io" --auth-token "your-token"
+mcp-libsql --url "libsql://your-db.turso.io" --auth-token "your-token"
 
 # Development mode with console logging
-pnpm dev --url file:///tmp/test.db --log-mode console
+mcp-libsql --dev --log-mode console --url file:///tmp/test.db
 
 # Test with different logging modes
-node dist/index.js --url file:///tmp/test.db --log-mode both
+mcp-libsql --url --log-mode both file:///tmp/test.db
 ```
 
 ### **Claude Desktop Integration**
@@ -100,10 +114,12 @@ Configure the MCP server in Claude Desktop based on your operating system:
 
 1. **Create configuration file** at `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
+**Global install**
 ```json
+
 {
   "mcpServers": {
-    "libsql": {
+    "mcp-libsql": {
       "command": "mcp-libsql",
       "args": [
         "--url",
@@ -114,38 +130,48 @@ Configure the MCP server in Claude Desktop based on your operating system:
 }
 ```
 
-**Alternative configuration with local installation:**
+**Alternative configuration for local build installation:**
 ```json
 {
   "mcpServers": {
-    "libsql": {
+    "mcp-libsql": {
       "command": "node",
       "args": [
         "/Users/username/projects/mcp-libsql/dist/index.js",
         "--url", 
         "file:///Users/username/database.db"
       ],
-      "cwd": "/Users/username/projects/mcp-libsql"
     }
   }
 }
 ```
 
-**Alternative system paths:**
-- Homebrew (Intel): `/usr/local/bin/node`
-- Homebrew (Apple Silicon): `/opt/homebrew/bin/node`
-- Official installer: `/usr/local/bin/node`
+**Alternative configuration for global install using nvm lts for node**
+```json
+{
+  "mcpServers": {
+    "mcp-libsql": {
+      "command": "zsh",
+      "args": [
+        "-c",
+        "source ~/.nvm/nvm.sh && nvm use --lts > /dev/null && mcp-libsql --url file:///Users/username/database.db",
+      ],
+    }
+  }
+}
+```
 
-**Important**: The global installation method is recommended as it handles PATH automatically. For local installations, Claude Desktop doesn't inherit your shell environment, so you may need to specify full paths.
+**Important**: The global installation method is recommended as it handles PATH automatically.
 
 #### **Linux Configuration**
 
 1. **Create configuration file** at `~/.config/Claude/claude_desktop_config.json`:
 
+**Global install**
 ```json
 {
   "mcpServers": {
-    "libsql": {
+    "mcp-libsql": {
       "command": "mcp-libsql",
       "args": [
         "--url",
@@ -156,18 +182,17 @@ Configure the MCP server in Claude Desktop based on your operating system:
 }
 ```
 
-**Alternative with local installation:**
+**Alternative configuration for local build installation:**
 ```json
 {
   "mcpServers": {
-    "libsql": {
+    "mcp-libsql": {
       "command": "node",
       "args": [
         "/home/username/projects/mcp-libsql/dist/index.js",
         "--url",
         "file:///home/username/database.db"
       ],
-      "cwd": "/home/username/projects/mcp-libsql"
     }
   }
 }
@@ -177,16 +202,51 @@ Configure the MCP server in Claude Desktop based on your operating system:
 
 1. **Create configuration file** at `%APPDATA%\Claude\claude_desktop_config.json`:
 
+**Global install**
 ```json
 {
   "mcpServers": {
-    "libsql": {
+    "mcp-libsql": {
       "command": "wsl.exe",
       "args": [
         "-e",
-        "mcp-libsql",
-        "--url",
-        "file:///home/username/database.db"
+        "bash",
+        "-c",
+        "mcp-libsql --url file:///home/username/database.db",
+      ]
+    }
+  }
+}
+```
+
+**Alternative configuration for local build installation:**
+```json
+{
+  "mcpServers": {
+    "mcp-libsql": {
+      "command": "wsl.exe",
+      "args": [
+        "-e",
+        "bash",
+        "-c",
+        "/home/username/projects/mcp-libsql/dist/index.js --url file:///home/username/database.db",
+      ]
+    }
+  }
+}
+```
+
+**Alternative configuration for global install using nvm for node**
+```json
+{
+  "mcpServers": {
+    "mcp-libsql": {
+      "command": "wsl.exe",
+      "args": [
+        "-e",
+        "bash",
+        "-c",
+        "source ~/.nvm/nvm.sh && mcp-libsql --url file:///home/username/database.db",
       ]
     }
   }
@@ -195,49 +255,31 @@ Configure the MCP server in Claude Desktop based on your operating system:
 
 **Important**: Use `wsl.exe -e` (not just `wsl.exe`) to ensure proper command handling and avoid issues with server command reception on Windows.
 
-**For HTTP databases (all platforms):**
-```json
-{
-  "mcpServers": {
-    "libsql": {
-      "command": "mcp-libsql",
-      "args": [
-        "--url",
-        "http://127.0.0.1:8080"
-      ]
-    }
-  }
-}
-```
+### **Database Authentication**
 
-### **Turso Authentication**
+For Turso (and other credentialed) databases, you'll need an authentication token. There are two secure ways to provide it:
 
-For Turso databases, you'll need an authentication token. There are two secure ways to provide it:
+_Global installation shown below, adjust accordingly for your setup_
 
 #### **Method 1: Environment Variable (Recommended)**
 
-**Configure Claude Desktop with environment variable** (macOS example):
+**Configure Claude Desktop with environment variable** (macOS/Linux example):
+```bash
+export LIBSQL_AUTH_TOKEN="your-turso-auth-token-here"
+```
+
 ```json
 {
   "mcpServers": {
-    "libsql": {
+    "mcp-libsql": {
       "command": "mcp-libsql",
       "args": [
         "--url",
         "libsql://your-database.turso.io"
-      ],
-      "env": {
-        "LIBSQL_AUTH_TOKEN": "your-turso-auth-token-here"
-      }
+      ]
     }
   }
 }
-```
-
-**For local testing, you can also export in your shell:**
-```bash
-export LIBSQL_AUTH_TOKEN="your-turso-auth-token-here"
-mcp-libsql --url "libsql://your-database.turso.io"
 ```
 
 #### **Method 2: CLI Parameter**
@@ -245,7 +287,7 @@ mcp-libsql --url "libsql://your-database.turso.io"
 ```json
 {
   "mcpServers": {
-    "libsql": {
+    "mcp-libsql": {
       "command": "mcp-libsql",
       "args": [
         "--url",
@@ -306,27 +348,28 @@ mcp-libsql --url "libsql://your-database.turso.io"
    ```
 
 2. **Configure Claude Desktop:**
-   ```json
-   {
-     "mcpServers": {
-       "libsql": {
-         "command": "mcp-libsql",
-         "args": [
-           "--url",
-           "libsql://my-app-db-username.turso.io"
-         ],
-         "env": {
-           "LIBSQL_AUTH_TOKEN": "your-long-auth-token-string"
-         }
-       }
-     }
-   }
-   ```
+    ```bash
+    export LIBSQL_AUTH_TOKEN="your-turso-auth-token-here"
+    ```
+
+    ```json
+    {
+      "mcpServers": {
+        "mcp-libsql": {
+          "command": "mcp-libsql",
+          "args": [
+            "--url",
+            "libsql://my-app-db-username.turso.io"
+          ]
+        }
+      }
+    }
+    ```
 
 3. **Test the connection:**
    ```bash
    # Test locally first
-   LIBSQL_AUTH_TOKEN="your-token" mcp-libsql --url "libsql://my-app-db-username.turso.io" --log-mode console
+   mcp-libsql --url "libsql://my-app-db-username.turso.io" --log-mode console
    ```
 
 #### **Configuration Notes**
@@ -352,19 +395,7 @@ mcp-libsql --url "libsql://your-database.turso.io"
    Can you run this SQL query: SELECT 1 as test
    ```
 
-## 🔧 **Quick Start**
 
-1. **Install:**
-   ```bash
-   npm install -g @xexr/mcp-libsql
-   ```
-
-2. **Test locally:**
-   ```bash
-   mcp-libsql --url file:///tmp/test.db --log-mode console
-   ```
-
-3. **Configure Claude Desktop** with your Node.js path and database URL (see configuration examples below)
 
 ## 📋 **Available Tools**
 
@@ -383,11 +414,11 @@ mcp-libsql --url "libsql://your-database.turso.io"
 # Run all tests
 pnpm test
 
-# Run tests with coverage
-pnpm test:coverage
-
 # Run tests in watch mode
 pnpm test:watch
+
+# Run tests with coverage
+pnpm test:coverage
 
 # Run specific test file
 pnpm test security-verification
@@ -402,7 +433,7 @@ pnpm lint:fix
 pnpm typecheck
 ```
 
-**Test Coverage**: 317 tests covering all functionality including edge cases, error scenarios, CLI arguments, authentication, and comprehensive security validation.
+**Test Coverage**: 403 tests covering all functionality including edge cases, error scenarios, CLI arguments, authentication, and comprehensive security validation.
 
 ## ⚠️ **Common Issues**
 
@@ -417,11 +448,9 @@ pnpm install && pnpm build
 ```
 SyntaxError: Unexpected token '??='
 ```
-**Problem**: Claude Desktop uses older Node.js version. **Solution**: Use global installation:
-```bash
-npm install -g @xexr/mcp-libsql
-```
-Then use `mcp-libsql` command directly in Claude Desktop configuration.
+**Problem**: Claude Desktop may default to using an older Node.js version on your system which doesn't support the required feature set.
+
+**Solution**: Use global installation and nvm node selection method shown above.
 
 ### **3. Server Won't Start**
 - For global installation: `npm install -g @xexr/mcp-libsql`
@@ -438,7 +467,7 @@ Then use `mcp-libsql` command directly in Claude Desktop configuration.
 ```
 Expected ',' or ']' after array element in JSON
 ```
-**Resolved**: This issue was caused by stdout pollution from console logging. The `--log-mode` option now defaults to `file` mode which prevents this issue. If you see these errors, ensure you're using the default `--log-mode file` or not specifying `--log-mode` at all.
+**Resolved**: This issue is caused by stdout console logging. The `--log-mode` option now defaults to `file` mode which prevents this issue. If you see these errors, ensure you're using the default `--log-mode file` or not specifying `--log-mode` at all. Note, the error is harmless, and the tool will still work with it if you wish to have console logging.
 
 ### **6. Database Connection Issues**
 ```bash
