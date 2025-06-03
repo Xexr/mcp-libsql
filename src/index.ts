@@ -364,12 +364,27 @@ async function main(): Promise<void> {
 }
 
 // Start the server
-// Check if this file is being run directly (works with both direct execution and npx)
-const isMainModule = import.meta.url === `file://${process.argv[1]}` || 
-                     process.argv[1]?.endsWith('/dist/index.js') ||
-                     process.argv[1]?.endsWith('\\dist\\index.js');
+// Check if this file is being run directly (handles symlinks from npm bin)
+import { fileURLToPath } from 'url';
+import { realpathSync } from 'fs';
 
-if (isMainModule) {
+function isMainModule(): boolean {
+  // Handle npm bin symlinks by resolving the real path
+  try {
+    if (!process.argv[1]) return false;
+    const realArgvPath = realpathSync(process.argv[1]);
+    const currentModulePath = fileURLToPath(import.meta.url);
+    return realArgvPath === currentModulePath;
+  } catch {
+    // Fallback for cases where realpathSync might fail
+    return import.meta.url === `file://${process.argv[1]}` ||
+           (process.argv[1]?.endsWith('/dist/index.js') ?? false) ||
+           (process.argv[1]?.endsWith('\\dist\\index.js') ?? false);
+  }
+}
+
+
+if (isMainModule()) {
   main().catch(error => {
     logger.error('Unhandled error in main', {
       error: error instanceof Error ? error.message : String(error)

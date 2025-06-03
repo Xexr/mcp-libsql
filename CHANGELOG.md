@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2025-06-03
+
+### Fixed
+
+#### npm Compatibility Issues
+- **Fixed npm global install and npx silent exit issue** - Resolved ES module main detection failing with npm bin symlinks
+- **Improved main module detection** - Use `realpathSync()` to resolve npm bin symlinks and `fileURLToPath()` for proper path comparison
+- **Universal package manager support** - Now works correctly with npm global install, npx, pnpm global, and pnpm dlx
+
+#### Technical Implementation
+- Replace basic `import.meta.url === \`file://\${process.argv[1]}\`` comparison with symlink-aware detection
+- Add fallback logic for edge cases where symlink resolution might fail
+- Maintain backward compatibility with direct script execution
+
+This resolves the issue where npm and npx would exit silently due to symlink path mismatch while pnpm worked correctly.
+
+## [1.0.1] - 2025-06-03
+
+### Fixed
+- **Fixed pnpm-lock.yaml inclusion** - Removed pnpm-lock.yaml from .gitignore to ensure reproducible builds in CI/CD
+- **Fixed GitHub Actions CI failure** - Resolved missing lock file error that prevented automated testing and publishing
+- **Improved npm package exclusions** - Added dist/logs/ to .npmignore to prevent log files from being included in published package
+
+### Improved
+- **Reduced package size** - Package size reduced from 51.6 kB to 49.2 kB by excluding development artifacts
+- **Enhanced release automation** - Improved GitHub Actions workflow reliability for automated publishing
+
 ## [1.0.0] - 2025-06-03
 
 ### Initial Release
