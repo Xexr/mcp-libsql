@@ -1,4 +1,5 @@
 # MCP libSQL by xexr
+[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/Xexr/mcp-libsql)](https://archestra.ai/mcp-catalog/xexr__mcp-libsql)
 
 A Model Context Protocol (MCP) server for libSQL database operations, providing secure database access through Claude Desktop, Claude Code, Cursor, and other MCP-compatible clients.
 
