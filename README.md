@@ -507,3 +507,8 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
 - [libSQL Documentation](https://docs.libsql.org/)
 - [Claude Desktop](https://claude.ai/desktop)
+
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/xexr-mcp-libsql).
+
